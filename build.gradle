@@ -17,8 +17,8 @@ repositories {
 }
 
 dependencies {
-    implementation group: 'ru.tinkoff.invest', name: 'openapi-java-sdk-core', version: '0.5-SNAPSHOT'
-    implementation group: 'ru.tinkoff.invest', name: 'openapi-java-sdk-java8', version: '0.5-SNAPSHOT'
+    implementation group: 'ru.tinkoff.invest', name: 'openapi-java-sdk-core', version: '0.4.1'
+    implementation group: 'ru.tinkoff.invest', name: 'openapi-java-sdk-java8', version: '0.4.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -46,6 +46,21 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
+ext {
+    set('springCloudVersion', "Hoxton.SR3")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+bootJar {
+    enabled = false
+}
+jar {
+    enabled = true
+}
 
 test {
     useJUnitPlatform()
