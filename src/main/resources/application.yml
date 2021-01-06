@@ -1,3 +1,6 @@
 spring:
   application:
     name: tradebot
+org:
+  nl:
+    ssoToken: not-set
