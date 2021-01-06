@@ -11,4 +11,5 @@ public class TradeBotApp {
     public static void main(String[] args) {
         SpringApplication.run(TradeBotApp.class, args);
     }
+
 }

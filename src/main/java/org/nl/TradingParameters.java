@@ -30,6 +30,7 @@ public class TradingParameters {
                                                     @Nonnull final String tickersArg,
                                                     @Nonnull final String candleIntervalsArg,
                                                     @Nonnull final String sandboxModeArg) {
+
         final String[] tickers = tickersArg.split(",");
         final CandleInterval[] candleIntervals = Arrays.stream(candleIntervalsArg.split(","))
                 .map(TradingParameters::parseCandleInterval)
