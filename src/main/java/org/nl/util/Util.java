@@ -10,6 +10,18 @@ public class Util {
     public static int[] findMaxExtremums(double[] window) {
         final int[] extremum = new int[2];
 
+        for (int i = 0; i < window.length; i++) {
+            if(window[i] > extremum[0]){
+                extremum[0] = i;
+            }
+        }
+
+        for (int j = 0; j < window.length; j++) {
+            if(window[j] > extremum[1] && j != extremum[0]){
+                extremum[1] = j;
+            }
+        }
+
         return extremum;
     }
 }
