@@ -27,19 +27,17 @@ public class TradingParameters {
 
     @Nonnull
     public static TradingParameters fromProgramArgs(@Nonnull final String ssoTokenArg,
-                                                    @Nonnull final String tickersArg,
-                                                    @Nonnull final String candleIntervalsArg,
-                                                    @Nonnull final String sandboxModeArg) {
-        final String[] tickers = tickersArg.split(",");
-        final CandleInterval[] candleIntervals = Arrays.stream(candleIntervalsArg.split(","))
+                                                    @Nonnull final String[] tickersArg,
+                                                    @Nonnull final String[] candleIntervalsArg,
+                                                    final boolean sandboxModeArg) {
+
+        final CandleInterval[] candleIntervals = Arrays.stream(candleIntervalsArg)
                 .map(TradingParameters::parseCandleInterval)
-                .toArray(value -> new CandleInterval[0]);
-        if (candleIntervals.length != tickers.length)
+                .toArray(value -> new CandleInterval[candleIntervalsArg.length]);
+        if (candleIntervals.length != tickersArg.length)
             throw new IllegalArgumentException("Количество переданных разрешающих интервалов свечей не совпадает с переданным количеством тикеров.");
 
-        final boolean useSandbox = Boolean.parseBoolean(sandboxModeArg);
-
-        return new TradingParameters(ssoTokenArg, tickers, candleIntervals, useSandbox);
+        return new TradingParameters(ssoTokenArg, tickersArg, candleIntervals, sandboxModeArg);
     }
 
     private static CandleInterval parseCandleInterval(final String str) {
