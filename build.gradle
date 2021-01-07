@@ -35,6 +35,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    implementation 'org.reactivestreams:reactive-streams:1.0.3'
+    implementation 'org.reactivestreams:reactive-streams-examples:1.0.3'
+    implementation 'com.squareup.okhttp3:okhttp:4.3.1'
+
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
