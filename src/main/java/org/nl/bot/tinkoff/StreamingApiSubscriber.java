@@ -1,4 +1,4 @@
-package org.nl;
+package org.nl.bot.tinkoff;
 
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.example.unicast.AsyncSubscriber;

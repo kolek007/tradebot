@@ -1,22 +1,18 @@
 package org.nl.bot.api;
 
-import lombok.EqualsAndHashCode;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 
 @RequiredArgsConstructor
 @Getter
-@EqualsAndHashCode
-@ToString
-public class Order {
+public class MoneyAmount {
+    @Nonnull
+    public final Currency currency;
 
-    private final int lots;
     @Nonnull
-    private final Operation operation;
-    @Nonnull
-    private final BigDecimal price;
+    public final BigDecimal value;
 }
