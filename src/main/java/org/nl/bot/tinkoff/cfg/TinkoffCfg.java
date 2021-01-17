@@ -2,15 +2,13 @@ package org.nl.bot.tinkoff.cfg;
 
 import org.nl.bot.api.BotManager;
 import org.nl.bot.api.strategies.StrategiesFactory;
-import org.nl.bot.tinkoff.BeansConverter;
-import org.nl.bot.tinkoff.OpenApiFactory;
-import org.nl.bot.tinkoff.TickerFigiMapping;
-import org.nl.bot.tinkoff.TinkoffAdapter;
+import org.nl.bot.tinkoff.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.Executors;
 
 @Configuration
 public class TinkoffCfg {
@@ -33,7 +31,12 @@ public class TinkoffCfg {
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     TinkoffAdapter tinkoffAdapter() {
-        return new TinkoffAdapter(openApiFactory().createConnection(), beansConverter(), tickerFigiMapping(), botManager());
+        return new TinkoffAdapter(openApiFactory().createConnection(), beansConverter(), tickerFigiMapping(), botManager(), subscriber());
+    }
+
+    @Bean
+    StreamingApiSubscriber subscriber() {
+        return new StreamingApiSubscriber(Executors.newSingleThreadExecutor(), beansConverter());
     }
 
     @Bean

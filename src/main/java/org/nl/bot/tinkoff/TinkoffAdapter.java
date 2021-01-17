@@ -33,7 +33,7 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Nonnull
     private final BotManager botManager;
     @Nonnull
-    private final StreamingApiSubscriber subscriber = new StreamingApiSubscriber(Executors.newSingleThreadExecutor(), beansConverter);
+    private final StreamingApiSubscriber subscriber;
 
     public void init() {
         log.info("INIT STARTED");
@@ -62,6 +62,7 @@ public class TinkoffAdapter implements BrokerAdapter {
         log.info("DESTROY STARTED");
         try {
             botManager.destroy();
+            subscriber.destroy();
             final List<ru.tinkoff.invest.openapi.models.orders.Order> currentOrders = api.getOrdersContext().getOrders(null).join();
             log.info("Closing {} orders", currentOrders.size());
             for (ru.tinkoff.invest.openapi.models.orders.Order order : currentOrders) {
