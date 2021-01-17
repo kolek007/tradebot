@@ -1,5 +1,13 @@
 package org.nl.bot.api;
 
-public interface Strategy {
-    void run() throws Exception;
+import javax.annotation.Nonnull;
+
+public interface Strategy extends Runnable {
+    /**
+     * Must be unique
+     */
+    @Nonnull
+    String getId();
+
+    void stop() throws Exception;
 }

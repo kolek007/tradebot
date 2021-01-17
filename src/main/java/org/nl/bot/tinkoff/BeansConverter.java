@@ -180,4 +180,20 @@ public class BeansConverter {
                 .status(status(order.status))
                 .build();
     }
+
+    @Nonnull
+    public TickerEvent candleEvent(StreamingEvent.Candle event) {
+        final TickerEvent.TickerEventBuilder builder = TickerEvent.builder();
+        builder.candle(Candle.builder()
+                .ticker(tickerFigiMapping.getTicker(event.getFigi()))
+                .interval(candleInterval(event.getInterval()))
+                .openPrice(event.getOpenPrice())
+                .closingPrice(event.getClosingPrice())
+                .highestPrice(event.getHighestPrice())
+                .lowestPrice(event.getLowestPrice())
+                .dateTime(event.getDateTime())
+                .tradingValue(event.getTradingValue())
+                .build());
+        return builder.build();
+    }
 }

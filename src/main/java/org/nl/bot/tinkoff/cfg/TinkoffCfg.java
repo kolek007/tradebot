@@ -1,5 +1,7 @@
 package org.nl.bot.tinkoff.cfg;
 
+import org.nl.bot.api.BotManager;
+import org.nl.bot.api.strategies.StrategiesFactory;
 import org.nl.bot.tinkoff.BeansConverter;
 import org.nl.bot.tinkoff.OpenApiFactory;
 import org.nl.bot.tinkoff.TickerFigiMapping;
@@ -25,22 +27,32 @@ public class TinkoffCfg {
     private boolean sandbox;
 
     @Bean(destroyMethod = "destroy")
-    OpenApiFactory getOpenApiFactory() {
+    OpenApiFactory openApiFactory() {
         return new OpenApiFactory(ssoToken, sandbox);
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
-    TinkoffAdapter getTinkoffAdapter() {
-        return new TinkoffAdapter(getOpenApiFactory().createConnection(), getBeansConverter(), getTickerFigiMapping());
+    TinkoffAdapter tinkoffAdapter() {
+        return new TinkoffAdapter(openApiFactory().createConnection(), beansConverter(), tickerFigiMapping(), botManager());
     }
 
     @Bean
-    TickerFigiMapping getTickerFigiMapping() {
+    TickerFigiMapping tickerFigiMapping() {
         return new TickerFigiMapping();
     }
 
     @Bean
-    BeansConverter getBeansConverter() {
-        return new BeansConverter(getTickerFigiMapping());
+    BeansConverter beansConverter() {
+        return new BeansConverter(tickerFigiMapping());
+    }
+
+    @Bean
+    BotManager botManager() {
+        return new BotManager();
+    }
+
+    @Bean
+    StrategiesFactory strategiesFactory() {
+        return new StrategiesFactory(tinkoffAdapter());
     }
 }
