@@ -1,4 +1,4 @@
-package org.nl.bot.api.linear_algebra;
+package org.nl.linear_algebra;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

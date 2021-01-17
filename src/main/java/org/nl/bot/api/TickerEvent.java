@@ -2,19 +2,15 @@ package org.nl.bot.api;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Singular;
 import lombok.ToString;
 
-import javax.annotation.Nullable;
-import java.util.List;
+import javax.annotation.Nonnull;
 
 @Builder
 @Getter
 @ToString
 public class TickerEvent {
-    @Nullable
+    @Nonnull
     private final Candle candle;
-    @Nullable
-    @Singular("placedOrder")
-    private final List<PlacedOrder> placedOrderList;
+
 }

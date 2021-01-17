@@ -1,7 +1,7 @@
 package org.nl.bot.api;
 
 public enum Interval {
-    MIN_1(1), MIN_5(5), MIN_15(15), MIN_30(30), HOUR_1(60), DAY_1(24*60), YEAR_1(24*60*365);
+    MIN_1(1), MIN_5(5), MIN_15(15), MIN_30(30), HOUR_1(60), DAY_1(24*60), WEEK(24*60*7), MONTH(24*60*7*4), YEAR_1(24*60*365);
 
     private final int minutes;
 

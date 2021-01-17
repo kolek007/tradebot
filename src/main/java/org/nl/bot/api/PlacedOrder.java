@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import ru.tinkoff.invest.openapi.models.MoneyAmount;
-import ru.tinkoff.invest.openapi.models.orders.Operation;
-import ru.tinkoff.invest.openapi.models.orders.Status;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

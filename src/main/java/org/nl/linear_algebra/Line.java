@@ -1,4 +1,4 @@
-package org.nl.bot.api.linear_algebra;
+package org.nl.linear_algebra;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-import static org.nl.bot.api.linear_algebra.Point.NA;
+import static org.nl.linear_algebra.Point.NA;
 
 @RequiredArgsConstructor(staticName = "create")
 @Getter
