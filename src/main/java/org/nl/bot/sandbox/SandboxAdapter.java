@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.nl.bot.api.*;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.example.unicast.AsyncSubscriber;
+import org.nl.bot.api.beans.Order;
+import org.nl.bot.api.beans.Orderbook;
+import org.nl.bot.api.beans.PlacedOrder;
+import org.nl.bot.sandbox.beans.PlacedOrderSbx;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
@@ -24,9 +26,9 @@ public class SandboxAdapter implements BrokerAdapter {
     private final BrokerAdapter adapter;
 
     @Nonnull
-    private final ConcurrentHashMap<String, Pair<Order, PlacedOrder>> created = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Pair<Order, PlacedOrderSbx>> created = new ConcurrentHashMap<>();
     @Nonnull
-    private final ConcurrentHashMap<String, PlacedOrder> completed = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, PlacedOrderSbx> completed = new ConcurrentHashMap<>();
 
     @Nonnull
     private final LinkedBlockingQueue<String> processingQueue = new LinkedBlockingQueue<>();
@@ -49,11 +51,11 @@ public class SandboxAdapter implements BrokerAdapter {
                     if(orderId == null) {
                         continue;
                     }
-                    final Pair<Order, PlacedOrder> orderPair = created.get(orderId);
+                    final Pair<Order, PlacedOrderSbx> orderPair = created.get(orderId);
                     if(orderPair == null) {
                         continue;
                     }
-                    PlacedOrder placedOrder = orderPair.getValue();
+                    PlacedOrderSbx placedOrder = orderPair.getValue();
                     Order order = orderPair.getKey();
                     synchronized (orderId) {
                         final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 7);
@@ -147,7 +149,7 @@ public class SandboxAdapter implements BrokerAdapter {
     @Override
     public CompletableFuture<PlacedOrder> placeOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull Order marketOrder, @Nullable String brokerAccountId) {
         CompletableFuture<PlacedOrder> future = new CompletableFuture<>();
-        final PlacedOrder placedOrder = PlacedOrder.builder()
+        final PlacedOrderSbx placedOrder = PlacedOrderSbx.builder()
                 .ticker(ticker)
                 .status(Status.New)
                 .id(UUID.randomUUID().toString())
@@ -168,7 +170,7 @@ public class SandboxAdapter implements BrokerAdapter {
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
         synchronized (orderId) {
-            final Pair<Order, PlacedOrder> pair = created.get(orderId);
+            final Pair<Order, PlacedOrderSbx> pair = created.get(orderId);
             if(pair != null) {
                 pair.getValue().status = Status.Cancelled;
                 completed.put(orderId, pair.getValue());

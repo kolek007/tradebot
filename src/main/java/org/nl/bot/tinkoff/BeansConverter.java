@@ -2,8 +2,11 @@ package org.nl.bot.tinkoff;
 
 import lombok.RequiredArgsConstructor;
 import org.nl.bot.api.*;
-import org.nl.bot.tinkoff.beans.OrderbookFromStreamTkf;
-import org.nl.bot.tinkoff.beans.OrderbookTkf;
+import org.nl.bot.api.beans.Candle;
+import org.nl.bot.api.beans.Order;
+import org.nl.bot.api.beans.Orderbook;
+import org.nl.bot.api.beans.PlacedOrder;
+import org.nl.bot.tinkoff.beans.*;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
 import ru.tinkoff.invest.openapi.models.orders.LimitOrder;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
@@ -64,7 +67,7 @@ public class BeansConverter {
     @Nonnull
     public Candle candle(@Nonnull StreamingEvent.Candle candle) {
         final CandleInterval interval = candle.getInterval();
-        return Candle.builder()
+        return CandleTkf.builder()
                 .interval(candleInterval(interval))
                 .ticker(tickerFigiMapping.getTicker(candle.getFigi()))
                 .openPrice(candle.getOpenPrice())
@@ -78,7 +81,7 @@ public class BeansConverter {
 
     @Nonnull
     public Order order(@Nonnull ru.tinkoff.invest.openapi.models.orders.Order order) {
-        return new Order(order.requestedLots, operation(order.operation), order.price);
+        return new OrderTkf(order.requestedLots, operation(order.operation), order.price);
     }
 
     @Nonnull
@@ -174,7 +177,7 @@ public class BeansConverter {
 
     @Nonnull
     public PlacedOrder placedOrder(@Nonnull ru.tinkoff.invest.openapi.models.orders.PlacedOrder order, @Nonnull String ticker) {
-        return PlacedOrder.builder()
+        return PlacedOrderTkf.builder()
                 .id(order.id)
                 .ticker(ticker)
                 .commission(moneyAmount(order.commission))
@@ -189,7 +192,7 @@ public class BeansConverter {
     @Nonnull
     public CandleEvent candleEvent(StreamingEvent.Candle event) {
         final CandleEvent.CandleEventBuilder builder = CandleEvent.builder();
-        builder.candle(Candle.builder()
+        builder.candle(CandleTkf.builder()
                 .ticker(tickerFigiMapping.getTicker(event.getFigi()))
                 .interval(candleInterval(event.getInterval()))
                 .openPrice(event.getOpenPrice())

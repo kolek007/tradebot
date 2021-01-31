@@ -1,6 +1,8 @@
 package org.nl.bot.api;
 
-import org.reactivestreams.Subscriber;
+import org.nl.bot.api.beans.Order;
+import org.nl.bot.api.beans.Orderbook;
+import org.nl.bot.api.beans.PlacedOrder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

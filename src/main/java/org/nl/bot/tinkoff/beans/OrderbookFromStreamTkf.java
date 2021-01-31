@@ -1,14 +1,11 @@
 package org.nl.bot.tinkoff.beans;
 
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.Nullable;
-import org.nl.bot.api.Orderbook;
+import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.tinkoff.TickerFigiMapping;
-import ru.tinkoff.invest.openapi.models.market.TradeStatus;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
 
 import javax.annotation.Nonnull;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 

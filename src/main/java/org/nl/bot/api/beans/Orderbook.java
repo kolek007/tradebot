@@ -1,4 +1,4 @@
-package org.nl.bot.api;
+package org.nl.bot.api.beans;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

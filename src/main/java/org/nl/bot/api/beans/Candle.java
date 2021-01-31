@@ -1,55 +1,48 @@
-package org.nl.bot.api;
+package org.nl.bot.api.beans;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import org.nl.bot.api.Interval;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
-@Builder
-@Getter
-@EqualsAndHashCode
-@ToString
-public class Candle {
+public interface Candle {
         /**
          * Цена открытия.
          */
-        private final BigDecimal openPrice;
+        BigDecimal getOpenPrice();
 
         /**
          * Цена закрытия.
          */
-        private final BigDecimal closingPrice;
+        BigDecimal getClosingPrice();
 
         /**
          * Цена макисмальная цена.
          */
-        private final BigDecimal highestPrice;
+        BigDecimal getHighestPrice();
 
         /**
          * Минимальная цена.
          */
-        private final BigDecimal lowestPrice;
+        BigDecimal getLowestPrice();
 
         /**
          * Объём торгов.
          */
-        private final BigDecimal tradingValue;
+        BigDecimal getTradingValue();
 
         /**
          * Дата/время формирования свечи.
          */
-        private final ZonedDateTime dateTime;
+        ZonedDateTime getDateTime();
 
         /**
          * Временной интервал свечи.
          */
-        private final Interval interval;
+        Interval getInterval();
 
         /**
          * Идентификатор инструмента.
          */
-        private final String ticker;
+        String getTicker();
 }

@@ -3,7 +3,7 @@ package org.nl.bot.api.strategies;
 import lombok.RequiredArgsConstructor;
 import org.nl.bot.api.BrokerAdapter;
 import org.nl.bot.api.TickerWithInterval;
-import org.nl.bot.api.PlacedOrder;
+import org.nl.bot.api.beans.PlacedOrder;
 import org.nl.bot.api.Strategy;
 
 import javax.annotation.Nonnull;

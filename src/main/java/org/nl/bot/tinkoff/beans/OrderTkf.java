@@ -1,9 +1,11 @@
-package org.nl.bot.api;
+package org.nl.bot.tinkoff.beans;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import org.nl.bot.api.Operation;
+import org.nl.bot.api.beans.Order;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
@@ -12,8 +14,7 @@ import java.math.BigDecimal;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class Order {
-
+public class OrderTkf implements Order {
     private final int lots;
     @Nonnull
     private final Operation operation;

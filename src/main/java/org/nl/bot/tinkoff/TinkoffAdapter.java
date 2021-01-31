@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.nl.bot.api.*;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.example.unicast.AsyncSubscriber;
+import org.nl.bot.api.beans.Order;
+import org.nl.bot.api.beans.Orderbook;
+import org.nl.bot.api.beans.PlacedOrder;
 import ru.tinkoff.invest.openapi.OpenApi;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
 import ru.tinkoff.invest.openapi.models.market.Instrument;
 import ru.tinkoff.invest.openapi.models.market.InstrumentsList;
-import ru.tinkoff.invest.openapi.models.operations.OperationsList;
 import ru.tinkoff.invest.openapi.models.portfolio.Portfolio;
 import ru.tinkoff.invest.openapi.models.portfolio.PortfolioCurrencies;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingRequest;
@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 
 @RequiredArgsConstructor
 @Slf4j
