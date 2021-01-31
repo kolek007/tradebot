@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 @Builder
 @Getter
 @ToString
-public class TickerEvent {
+public class CandleEvent {
     @Nonnull
     private final Candle candle;
 

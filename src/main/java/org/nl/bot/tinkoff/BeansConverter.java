@@ -2,12 +2,15 @@ package org.nl.bot.tinkoff;
 
 import lombok.RequiredArgsConstructor;
 import org.nl.bot.api.*;
+import org.nl.bot.tinkoff.beans.OrderbookFromStreamTkf;
+import org.nl.bot.tinkoff.beans.OrderbookTkf;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
 import ru.tinkoff.invest.openapi.models.orders.LimitOrder;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +87,8 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public CompletableFuture<PlacedOrder> placedOrderFuture(CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future) {
+    public CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
+                                                            @Nonnull String ticker) {
         return new CompletableFuture<PlacedOrder>() {
             @Override
             public boolean isDone() {
@@ -93,17 +97,17 @@ public class BeansConverter {
 
             @Override
             public PlacedOrder get() throws InterruptedException, ExecutionException {
-                return placedOrder(future.get());
+                return placedOrder(future.get(), ticker);
             }
 
             @Override
             public PlacedOrder get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                return placedOrder(future.get(timeout, unit));
+                return placedOrder(future.get(timeout, unit), ticker);
             }
 
             @Override
             public PlacedOrder join() {
-                return placedOrder(future.join());
+                return placedOrder(future.join(), ticker);
             }
         };
     }
@@ -169,9 +173,10 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public PlacedOrder placedOrder(@Nonnull ru.tinkoff.invest.openapi.models.orders.PlacedOrder order) {
+    public PlacedOrder placedOrder(@Nonnull ru.tinkoff.invest.openapi.models.orders.PlacedOrder order, @Nonnull String ticker) {
         return PlacedOrder.builder()
                 .id(order.id)
+                .ticker(ticker)
                 .commission(moneyAmount(order.commission))
                 .executedLots(order.executedLots)
                 .message(order.message)
@@ -182,8 +187,8 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public TickerEvent candleEvent(StreamingEvent.Candle event) {
-        final TickerEvent.TickerEventBuilder builder = TickerEvent.builder();
+    public CandleEvent candleEvent(StreamingEvent.Candle event) {
+        final CandleEvent.CandleEventBuilder builder = CandleEvent.builder();
         builder.candle(Candle.builder()
                 .ticker(tickerFigiMapping.getTicker(event.getFigi()))
                 .interval(candleInterval(event.getInterval()))
@@ -195,5 +200,43 @@ public class BeansConverter {
                 .tradingValue(event.getTradingValue())
                 .build());
         return builder.build();
+    }
+
+    @Nonnull
+    public CompletableFuture<Optional<Orderbook>> orderbook(CompletableFuture<Optional<ru.tinkoff.invest.openapi.models.market.Orderbook>> future) {
+        return new CompletableFuture<Optional<Orderbook>>() {
+            @Override
+            public boolean isDone() {
+                return future.isDone();
+            }
+
+            @Override
+            public Optional<Orderbook> get() throws InterruptedException, ExecutionException {
+                return orderbook(future.get());
+            }
+
+            @Override
+            public Optional<Orderbook> get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return orderbook(future.get(timeout, unit));
+            }
+
+            @Override
+            public Optional<Orderbook> join() {
+                return orderbook(future.join());
+            }
+        };
+    }
+
+    private Optional<Orderbook> orderbook(Optional<ru.tinkoff.invest.openapi.models.market.Orderbook> orderbook) {
+        return orderbook.map(value -> new OrderbookTkf(value, tickerFigiMapping));
+    }
+
+    private Orderbook orderbook(@Nonnull StreamingEvent.Orderbook orderbook) {
+        return new OrderbookFromStreamTkf(orderbook, tickerFigiMapping);
+    }
+
+    @Nonnull
+    public OrderbookEvent orderbookEvent(@Nonnull StreamingEvent.Orderbook event) {
+        return new OrderbookEvent(orderbook(event));
     }
 }

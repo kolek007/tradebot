@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 @Getter
 public class MoneyAmount {
     @Nonnull
-    public final Currency currency;
+    public Currency currency;
 
     @Nonnull
-    public final BigDecimal value;
+    public BigDecimal value;
 }

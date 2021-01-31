@@ -2,7 +2,6 @@ package org.nl.bot.tinkoff;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.nl.bot.api.*;
 import org.reactivestreams.Subscriber;
@@ -11,6 +10,7 @@ import ru.tinkoff.invest.openapi.OpenApi;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
 import ru.tinkoff.invest.openapi.models.market.Instrument;
 import ru.tinkoff.invest.openapi.models.market.InstrumentsList;
+import ru.tinkoff.invest.openapi.models.operations.OperationsList;
 import ru.tinkoff.invest.openapi.models.portfolio.Portfolio;
 import ru.tinkoff.invest.openapi.models.portfolio.PortfolioCurrencies;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingRequest;
@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 @Slf4j
 public class TinkoffAdapter implements BrokerAdapter {
+    public static final int DEPTH = 7;
     @Nonnull
     private final OpenApi api;
     @Nonnull
@@ -33,7 +34,7 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Nonnull
     private final BotManager botManager;
     @Nonnull
-    private final StreamingApiSubscriber subscriber;
+    private final TinkoffSubscriber subscriber;
 
     public void init() {
         log.info("INIT STARTED");
@@ -47,18 +48,10 @@ public class TinkoffAdapter implements BrokerAdapter {
             log.info("position: \n{}", portfolioPosition);
         }
 
-        //TODO temp code for testing, remove this
-        subscribe("TEST", new org.nl.bot.api.Instrument("AAPL", Interval.MIN_1), new AsyncSubscriber<TickerEvent>(Executors.newSingleThreadExecutor()) {
-            @Override
-            protected boolean whenNext(TickerEvent element) {
-                log.info("Пришло новое событие из Streaming API\n {}", element);
-                return true;
-            }
-        });
         log.info("INIT ENDED");
     }
 
-    private void destroy() {
+    public void destroy() {
         log.info("DESTROY STARTED");
         try {
             botManager.destroy();
@@ -87,10 +80,10 @@ public class TinkoffAdapter implements BrokerAdapter {
     }
 
     @Override
-    public void subscribe(
+    public void subscribeCandle(
             @Nonnull String botId,
-            @Nonnull org.nl.bot.api.Instrument instr,
-            @Nonnull Subscriber<TickerEvent> listener
+            @Nonnull TickerWithInterval instr,
+            @Nonnull EventListener<CandleEvent> listener
     ) {
 
         final CandleInterval candleInterval = beansConverter.candleInterval(instr.getInterval());
@@ -103,9 +96,9 @@ public class TinkoffAdapter implements BrokerAdapter {
     }
 
     @Override
-    public void unsubscribe(
+    public void unsubscribeCandle(
             @Nonnull String botId,
-            @Nonnull org.nl.bot.api.Instrument instr
+            @Nonnull TickerWithInterval instr
     ) {
         final CandleInterval candleInterval = beansConverter.candleInterval(instr.getInterval());
 
@@ -127,7 +120,7 @@ public class TinkoffAdapter implements BrokerAdapter {
             @Nullable String brokerAccountId
     ) {
         final CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future = api.getOrdersContext().placeLimitOrder(tickerFigiMapping.getFigi(ticker), beansConverter.limitOrder(order), null);
-        return beansConverter.placedOrderFuture(future);
+        return beansConverter.placedOrderFuture(future, ticker);
     }
 
     @Nonnull
@@ -136,8 +129,30 @@ public class TinkoffAdapter implements BrokerAdapter {
         return api.getOrdersContext().cancelOrder(orderId, null);
     }
 
+    @Nonnull
+    @Override
+    public CompletableFuture<Optional<Orderbook>> getOrderbook(@Nonnull String ticker, int depth) {
+
+        return beansConverter.orderbook(api.getMarketContext().getMarketOrderbook(tickerFigiMapping.getFigi(ticker), depth));
+    }
+
+    @Override
+    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<CandleEvent> listener) {
+        getInstrument(ticker);
+        api.getStreamingContext().sendRequest(StreamingRequest.subscribeOrderbook(tickerFigiMapping.getFigi(ticker), DEPTH));
+    }
+
+    @Override
+    public void unsubscribeOrderbook(@Nonnull String botId, @Nonnull String ticker) {
+        try {
+            api.getStreamingContext().sendRequest(StreamingRequest.unsubscribeOrderbook(tickerFigiMapping.getFigi(ticker), DEPTH));
+        } finally {
+            subscriber.unsubscribe(botId, ticker);
+        }
+    }
+
     @Nullable
-    private Instrument getInstrument(@NotNull String ticker) {
+    private Instrument getInstrument(@Nonnull String ticker) {
         log.info("Ищём по тикеру {}... ", ticker);
         final InstrumentsList instrumentsList = api.getMarketContext().searchMarketInstrumentsByTicker(ticker).join();
 
@@ -150,6 +165,8 @@ public class TinkoffAdapter implements BrokerAdapter {
         } else {
             instrument = instrumentOpt.get();
         }
+
+        tickerFigiMapping.put(ticker, instrument.figi);
 
         log.info("Получаем валютные балансы... ");
         final PortfolioCurrencies portfolioCurrencies = api.getPortfolioContext().getPortfolioCurrencies(null).join();

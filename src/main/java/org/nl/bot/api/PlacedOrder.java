@@ -1,9 +1,6 @@
 package org.nl.bot.api;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -13,6 +10,9 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @ToString
 public final class PlacedOrder {
+
+    @Nonnull
+    public final String ticker;
 
     /**
      * Идентификатор заявки.
@@ -30,34 +30,34 @@ public final class PlacedOrder {
      * Текущий статус.
      */
     @Nonnull
-    public final Status status;
+    public Status status;
 
     /**
      * Код причина отказа в размещении.
      */
     @Nullable
-    public final String rejectReason;
+    public String rejectReason;
 
     /**
      * Причина отказа в размещении (человеческий текст).
      */
     @Nullable
-    public final String message;
+    public String message;
 
     /**
      * Желаемое количество лотов.
      */
-    public final int requestedLots;
+    public int requestedLots;
 
     /**
      * Реально исполненное количество лотов.
      */
-    public final int executedLots;
+    public int executedLots;
 
     /**
      * Размер коммиссии.
      */
     @Nullable
-    public final MoneyAmount commission;
+    public MoneyAmount commission;
 
 }

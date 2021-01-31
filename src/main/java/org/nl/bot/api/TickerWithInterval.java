@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class Instrument {
+public class TickerWithInterval {
     @Nonnull
     String ticker;
     @Nonnull

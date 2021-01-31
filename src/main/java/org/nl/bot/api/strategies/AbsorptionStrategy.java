@@ -1,7 +1,7 @@
 package org.nl.bot.api.strategies;
 
 import org.nl.bot.api.BrokerAdapter;
-import org.nl.bot.api.Instrument;
+import org.nl.bot.api.TickerWithInterval;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public class AbsorptionStrategy extends AbstractStrategy {
 
-    public AbsorptionStrategy(List<Instrument> instruments, BrokerAdapter adapter) {
+    public AbsorptionStrategy(List<TickerWithInterval> instruments, BrokerAdapter adapter) {
         super(instruments, adapter);
     }
 

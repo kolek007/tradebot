@@ -17,7 +17,7 @@ public class TickerFigiMapping {
 
     @Nonnull
     public String getTicker(@Nonnull String figi) {
-        if(figi2Ticker.containsKey(figi)) {
+        if(!figi2Ticker.containsKey(figi)) {
             throw new RuntimeException("Couldn't map figi {" + figi + "} to any ticker");
         }
         return figi2Ticker.get(figi);
@@ -25,7 +25,7 @@ public class TickerFigiMapping {
 
     @Nonnull
     public String getFigi(@Nonnull String ticker) {
-        if(ticker2Figi.containsKey(ticker)) {
+        if(!ticker2Figi.containsKey(ticker)) {
             throw new RuntimeException("Couldn't map ticker {" + ticker + "} to any figi");
         }
         return ticker2Figi.get(ticker);

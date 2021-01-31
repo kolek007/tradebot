@@ -4,13 +4,18 @@ import org.reactivestreams.Subscriber;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface BrokerAdapter {
 
-    void subscribe(@Nonnull String botId, @Nonnull Instrument instrument, @Nonnull Subscriber<TickerEvent> listener);
+    void subscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument, @Nonnull EventListener<CandleEvent> listener);
 
-    void unsubscribe(@Nonnull String botId, @Nonnull Instrument instrument);
+    void unsubscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument);
+
+    void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<CandleEvent> listener);
+
+    void unsubscribeOrderbook(@Nonnull String botId, @Nonnull String ticker);
 
     @Nonnull
     CompletableFuture<PlacedOrder> placeOrder(
@@ -31,6 +36,12 @@ public interface BrokerAdapter {
             @Nonnull String botId,
             @Nonnull String orderId,
             @Nullable String brokerAccountId
+    );
+
+    @Nonnull
+    CompletableFuture<Optional<Orderbook>> getOrderbook(
+            @Nonnull String ticker,
+            int depth
     );
 
 }

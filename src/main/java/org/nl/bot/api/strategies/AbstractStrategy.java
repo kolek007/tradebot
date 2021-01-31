@@ -2,7 +2,7 @@ package org.nl.bot.api.strategies;
 
 import lombok.RequiredArgsConstructor;
 import org.nl.bot.api.BrokerAdapter;
-import org.nl.bot.api.Instrument;
+import org.nl.bot.api.TickerWithInterval;
 import org.nl.bot.api.PlacedOrder;
 import org.nl.bot.api.Strategy;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 public abstract class AbstractStrategy implements Strategy {
 
     @Nonnull
-    protected final List<Instrument> instruments;
+    protected final List<TickerWithInterval> instruments;
     @Nonnull
     protected final BrokerAdapter adapter;
     @Nonnull
@@ -31,7 +31,7 @@ public abstract class AbstractStrategy implements Strategy {
     @Override
     public void stop() throws Exception {
         final String id = getId();
-        instruments.forEach(instr -> adapter.unsubscribe(id, instr));
+        instruments.forEach(instr -> adapter.unsubscribeCandle(id, instr));
         for(String orderId : placedOrderMap.keySet()) {
             adapter.cancelOrder(id, orderId, null);
         }

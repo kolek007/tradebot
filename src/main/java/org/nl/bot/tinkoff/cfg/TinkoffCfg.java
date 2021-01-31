@@ -2,6 +2,7 @@ package org.nl.bot.tinkoff.cfg;
 
 import org.nl.bot.api.BotManager;
 import org.nl.bot.api.strategies.StrategiesFactory;
+import org.nl.bot.sandbox.SandboxAdapter;
 import org.nl.bot.tinkoff.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +35,14 @@ public class TinkoffCfg {
         return new TinkoffAdapter(openApiFactory().createConnection(), beansConverter(), tickerFigiMapping(), botManager(), subscriber());
     }
 
+    @Bean(initMethod = "init", destroyMethod = "destroy")
+    SandboxAdapter sandboxAdapter() {
+        return new SandboxAdapter(tinkoffAdapter());
+    }
+
     @Bean
-    StreamingApiSubscriber subscriber() {
-        return new StreamingApiSubscriber(Executors.newSingleThreadExecutor(), beansConverter());
+    TinkoffSubscriber subscriber() {
+        return new TinkoffSubscriber(Executors.newSingleThreadExecutor(), beansConverter());
     }
 
     @Bean
