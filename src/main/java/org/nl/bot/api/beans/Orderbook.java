@@ -1,10 +1,9 @@
 package org.nl.bot.api.beans;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.List;
 

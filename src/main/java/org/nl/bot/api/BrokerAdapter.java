@@ -15,7 +15,7 @@ public interface BrokerAdapter {
 
     void unsubscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument);
 
-    void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<CandleEvent> listener);
+    void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener);
 
     void unsubscribeOrderbook(@Nonnull String botId, @Nonnull String ticker);
 

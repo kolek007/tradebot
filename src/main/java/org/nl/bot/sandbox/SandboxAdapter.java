@@ -122,7 +122,7 @@ public class SandboxAdapter implements BrokerAdapter {
         });
         //TODO temp code for testing, remove this
         subscribeCandle("TEST", new TickerWithInterval("AAPL", Interval.MIN_1), element -> log.info("Пришло новое событие из Candle API\n {}", element));
-        subscribeOrderbook("TEST", "AAPL", element -> log.info("Пришло новое событие из Orderbook API\n {}", element));
+        subscribeOrderbook("TEST", "AAPL", element -> log.info("Пришло новое событие из Orderbook API\n {}", element.getOrderbook()));
     }
 
     @Override
@@ -136,7 +136,7 @@ public class SandboxAdapter implements BrokerAdapter {
     }
 
     @Override
-    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<CandleEvent> listener) {
+    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener) {
         adapter.subscribeOrderbook(botId, ticker, listener);
     }
 

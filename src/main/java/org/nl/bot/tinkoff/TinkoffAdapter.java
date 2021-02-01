@@ -136,8 +136,9 @@ public class TinkoffAdapter implements BrokerAdapter {
     }
 
     @Override
-    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<CandleEvent> listener) {
+    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener) {
         getInstrument(ticker);
+        subscriber.subscribe(botId, ticker, listener);
         api.getStreamingContext().sendRequest(StreamingRequest.subscribeOrderbook(tickerFigiMapping.getFigi(ticker), DEPTH));
     }
 

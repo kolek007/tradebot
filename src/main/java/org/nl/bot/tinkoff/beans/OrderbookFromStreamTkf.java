@@ -1,6 +1,7 @@
 package org.nl.bot.tinkoff.beans;
 
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.tinkoff.TickerFigiMapping;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@ToString
 public class OrderbookFromStreamTkf implements Orderbook {
     @Nonnull
     private final StreamingEvent.Orderbook orderbook;
