@@ -186,4 +186,14 @@ public class SandboxAdapter implements BrokerAdapter {
     public CompletableFuture<Optional<Orderbook>> getOrderbook(@Nonnull String ticker, int depth) {
         return adapter.getOrderbook(ticker, depth);
     }
+
+    @Override
+    public void subscribeOnOrdersUpdate(@Nonnull String botId, @Nonnull EventListener<OrderUpdateEvent> listener) {
+        //TODO
+    }
+
+    @Override
+    public void unsubscribeFromOrdersUpdate(@Nonnull String botId) {
+        //TODO
+    }
 }

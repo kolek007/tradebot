@@ -18,7 +18,7 @@ import ru.tinkoff.invest.openapi.models.streaming.StreamingRequest;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -33,11 +33,13 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Nonnull
     private final BotManager botManager;
     @Nonnull
-    private final TinkoffSubscriber subscriber;
+    private final TinkoffSubscriber tkfSubscriber;
+    @Nonnull
+    private final OrdersManager ordersManager;
 
     public void init() {
         log.info("INIT STARTED");
-        api.getStreamingContext().getEventPublisher().subscribe(subscriber);
+        api.getStreamingContext().getEventPublisher().subscribe(tkfSubscriber);
 
         final List<ru.tinkoff.invest.openapi.models.orders.Order> currentOrders = api.getOrdersContext().getOrders(null).join();
         log.info("Количество текущих заявок: {}", currentOrders.size());
@@ -54,7 +56,7 @@ public class TinkoffAdapter implements BrokerAdapter {
         log.info("DESTROY STARTED");
         try {
             botManager.destroy();
-            subscriber.destroy();
+            tkfSubscriber.destroy();
             final List<ru.tinkoff.invest.openapi.models.orders.Order> currentOrders = api.getOrdersContext().getOrders(null).join();
             log.info("Closing {} orders", currentOrders.size());
             for (ru.tinkoff.invest.openapi.models.orders.Order order : currentOrders) {
@@ -90,7 +92,7 @@ public class TinkoffAdapter implements BrokerAdapter {
         final Instrument instrument = getInstrument(instr.getTicker());
         if (instrument == null) return;
 
-        subscriber.subscribe(botId, instr, listener);
+        tkfSubscriber.subscribeCandle(botId, instr, listener);
         api.getStreamingContext().sendRequest(StreamingRequest.subscribeCandle(instrument.figi, candleInterval));
     }
 
@@ -106,7 +108,7 @@ public class TinkoffAdapter implements BrokerAdapter {
         try {
             api.getStreamingContext().sendRequest(StreamingRequest.unsubscribeCandle(instrument.figi, candleInterval));
         } finally {
-            subscriber.unsubscribe(botId, instr);
+            tkfSubscriber.unsubscribeCandle(botId, instr);
         }
     }
 
@@ -119,13 +121,15 @@ public class TinkoffAdapter implements BrokerAdapter {
             @Nullable String brokerAccountId
     ) {
         final CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future = api.getOrdersContext().placeLimitOrder(tickerFigiMapping.getFigi(ticker), beansConverter.limitOrder(order), null);
-        return beansConverter.placedOrderFuture(future, ticker);
+        return placedOrderFuture(future, ticker, botId, ordersManager);
     }
 
     @Nonnull
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
-        return api.getOrdersContext().cancelOrder(orderId, null);
+        final CompletableFuture<Void> future = api.getOrdersContext().cancelOrder(orderId, null);
+        ordersManager.cancelOrder(orderId);
+        return future;
     }
 
     @Nonnull
@@ -138,7 +142,7 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Override
     public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener) {
         getInstrument(ticker);
-        subscriber.subscribe(botId, ticker, listener);
+        tkfSubscriber.subscribeOrderbook(botId, ticker, listener);
         api.getStreamingContext().sendRequest(StreamingRequest.subscribeOrderbook(tickerFigiMapping.getFigi(ticker), DEPTH));
     }
 
@@ -147,7 +151,7 @@ public class TinkoffAdapter implements BrokerAdapter {
         try {
             api.getStreamingContext().sendRequest(StreamingRequest.unsubscribeOrderbook(tickerFigiMapping.getFigi(ticker), DEPTH));
         } finally {
-            subscriber.unsubscribe(botId, ticker);
+            tkfSubscriber.unsubscribeOrderbook(botId, ticker);
         }
     }
 
@@ -186,4 +190,45 @@ public class TinkoffAdapter implements BrokerAdapter {
         return instrument;
     }
 
+    @Nonnull
+    public CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
+                                                            String botId, @Nonnull String ticker, @Nonnull OrdersManager ordersManager) {
+        return new CompletableFuture<PlacedOrder>() {
+            @Override
+            public boolean isDone() {
+                return future.isDone();
+            }
+
+            @Override
+            public PlacedOrder get() throws InterruptedException, ExecutionException {
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(), ticker);
+                ordersManager.registerOrder(botId, placedOrder.getId());
+                return placedOrder;
+            }
+
+            @Override
+            public PlacedOrder get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(timeout, unit), ticker);
+                ordersManager.registerOrder(botId, placedOrder.getId());
+                return placedOrder;
+            }
+
+            @Override
+            public PlacedOrder join() {
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.join(), ticker);
+                ordersManager.registerOrder(botId, placedOrder.getId());
+                return placedOrder;
+            }
+        };
+    }
+
+    @Override
+    public void subscribeOnOrdersUpdate(@Nonnull String botId, @Nonnull EventListener<OrderUpdateEvent> listener) {
+        ordersManager.subscribeOnOrdersUpdate(botId, listener);
+    }
+
+    @Override
+    public void unsubscribeFromOrdersUpdate(@Nonnull String botId) {
+        ordersManager.unsubscribeFromOrdersUpdate(botId);
+    }
 }

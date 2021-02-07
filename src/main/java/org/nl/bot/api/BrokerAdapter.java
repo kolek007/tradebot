@@ -3,21 +3,16 @@ package org.nl.bot.api;
 import org.nl.bot.api.beans.Order;
 import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.api.beans.PlacedOrder;
+import org.nl.bot.api.subscribers.CandleSubscriber;
+import org.nl.bot.api.subscribers.OrderbookSubscriber;
+import org.nl.bot.api.subscribers.OrdersSubscriber;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface BrokerAdapter {
-
-    void subscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument, @Nonnull EventListener<CandleEvent> listener);
-
-    void unsubscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument);
-
-    void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener);
-
-    void unsubscribeOrderbook(@Nonnull String botId, @Nonnull String ticker);
+public interface BrokerAdapter extends CandleSubscriber, OrderbookSubscriber, OrdersSubscriber {
 
     @Nonnull
     CompletableFuture<PlacedOrder> placeOrder(

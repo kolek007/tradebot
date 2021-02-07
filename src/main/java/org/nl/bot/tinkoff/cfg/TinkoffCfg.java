@@ -7,6 +7,7 @@ import org.nl.bot.tinkoff.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import ru.tinkoff.invest.openapi.OpenApi;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.Executors;
@@ -30,9 +31,14 @@ public class TinkoffCfg {
         return new OpenApiFactory(ssoToken, sandbox);
     }
 
+    @Bean
+    OpenApi openApi() {
+        return openApiFactory().createConnection();
+    }
+
     @Bean(initMethod = "init", destroyMethod = "destroy")
     TinkoffAdapter tinkoffAdapter() {
-        return new TinkoffAdapter(openApiFactory().createConnection(), beansConverter(), tickerFigiMapping(), botManager(), subscriber());
+        return new TinkoffAdapter(openApi(), beansConverter(), tickerFigiMapping(), botManager(), tkfSubscriber(), ordersManager());
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
@@ -41,8 +47,13 @@ public class TinkoffCfg {
     }
 
     @Bean
-    TinkoffSubscriber subscriber() {
+    TinkoffSubscriber tkfSubscriber() {
         return new TinkoffSubscriber(Executors.newSingleThreadExecutor(), beansConverter());
+    }
+
+    @Bean(initMethod = "init", destroyMethod = "destroy")
+    OrdersManager ordersManager() {
+        return new OrdersManager(beansConverter(), openApi());
     }
 
     @Bean

@@ -1,10 +1,7 @@
 package org.nl.bot.api.strategies;
 
 import lombok.RequiredArgsConstructor;
-import org.nl.bot.api.BrokerAdapter;
-import org.nl.bot.api.TickerWithInterval;
-import org.nl.bot.api.Interval;
-import org.nl.bot.api.Strategy;
+import org.nl.bot.api.*;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -14,9 +11,9 @@ public class StrategiesFactory {
     @Nonnull
     private final BrokerAdapter adapter;
 
-    public Strategy createAbsorptionStrategy(@Nonnull String ticker, @Nonnull Interval interval) {
+    public AbsorptionStrategy createAbsorptionStrategy(@Nonnull String ticker, @Nonnull Interval interval, @Nonnull Wallet wallet) {
         final ArrayList<TickerWithInterval> instruments = new ArrayList<>();
         instruments.add(new TickerWithInterval(ticker, interval));
-        return new AbsorptionStrategy(instruments, adapter);
+        return new AbsorptionStrategy(instruments, adapter, wallet);
     }
 }

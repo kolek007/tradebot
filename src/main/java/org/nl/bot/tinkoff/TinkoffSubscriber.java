@@ -1,12 +1,9 @@
 package org.nl.bot.tinkoff;
 
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.nl.bot.api.CandleEvent;
-import org.nl.bot.api.EventListener;
-import org.nl.bot.api.OrderbookEvent;
-import org.nl.bot.api.TickerWithInterval;
+import org.nl.bot.api.*;
+import org.nl.bot.api.subscribers.CandleSubscriber;
+import org.nl.bot.api.subscribers.OrderbookSubscriber;
 import org.reactivestreams.example.unicast.AsyncSubscriber;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
 
@@ -16,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 @Slf4j
-public class TinkoffSubscriber extends AsyncSubscriber<StreamingEvent> {
+public class TinkoffSubscriber extends AsyncSubscriber<StreamingEvent> implements CandleSubscriber, OrderbookSubscriber {
     @Nonnull
     private final BeansConverter converter;
     @Nonnull
@@ -29,11 +26,13 @@ public class TinkoffSubscriber extends AsyncSubscriber<StreamingEvent> {
         this.converter = beansConverter;
     }
 
-    public void subscribe(@Nonnull String botId, @Nonnull TickerWithInterval instrument, @Nonnull EventListener<CandleEvent> listener) {
+    @Override
+    public void subscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instrument, @Nonnull EventListener<CandleEvent> listener) {
         candleSubscriptions.put(new InstrumentPerBot(botId, instrument), listener);
     }
 
-    public void subscribe(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener) {
+    @Override
+    public void subscribeOrderbook(@Nonnull String botId, @Nonnull String ticker, @Nonnull EventListener<OrderbookEvent> listener) {
         orderbookSubscriptions.put(new TickerPerBot(botId, ticker), listener);
     }
 
@@ -42,51 +41,32 @@ public class TinkoffSubscriber extends AsyncSubscriber<StreamingEvent> {
 //        log.info("Пришло новое событие из Streaming API\n {}", event);
         if(event instanceof StreamingEvent.Candle) {
             final CandleEvent candleEvent = converter.candleEvent((StreamingEvent.Candle) event);
-            candleSubscriptions.entrySet().stream().filter(e -> listenerMatches(candleEvent, e)).forEach(e -> {
-                e.getValue().onEvent(candleEvent);
-            });
+            candleSubscriptions.entrySet().stream().filter(e -> listenerMatches(candleEvent, e)).forEach(e -> e.getValue().onEvent(candleEvent));
         } else if(event instanceof StreamingEvent.Orderbook) {
             final OrderbookEvent orderbookEvent = converter.orderbookEvent((StreamingEvent.Orderbook) event);
-            orderbookSubscriptions.entrySet().stream().filter(e -> orderbookEvent.getOrderbook().getTicker().equals(e.getKey().ticker)).forEach(e -> {
-                e.getValue().onEvent(orderbookEvent);
-            });
+            orderbookSubscriptions.entrySet().stream().filter(e -> orderbookEvent.getOrderbook().getTicker().equals(e.getKey().getTicker())).forEach(e -> e.getValue().onEvent(orderbookEvent));
         }
         return true;
     }
 
     private boolean listenerMatches(CandleEvent candleEvent, Map.Entry<InstrumentPerBot, EventListener<CandleEvent>> e) {
-        return e.getKey().instrument.getTicker().equals(candleEvent.getCandle().getTicker())
-                && e.getKey().instrument.getInterval().equals(candleEvent.getCandle().getInterval());
+        return e.getKey().getInstrument().getTicker().equals(candleEvent.getCandle().getTicker())
+                && e.getKey().getInstrument().getInterval().equals(candleEvent.getCandle().getInterval());
     }
 
-    public void unsubscribe(@Nonnull String botId, @Nonnull TickerWithInterval instr) {
+    @Override
+    public void unsubscribeCandle(@Nonnull String botId, @Nonnull TickerWithInterval instr) {
         candleSubscriptions.remove(new InstrumentPerBot(botId, instr));
     }
 
-    public void unsubscribe(@Nonnull String botId, @Nonnull String ticker) {
+    @Override
+    public void unsubscribeOrderbook(@Nonnull String botId, @Nonnull String ticker) {
         orderbookSubscriptions.remove(new TickerPerBot(botId, ticker));
     }
 
     public void destroy() {
-        candleSubscriptions.keySet().forEach(key -> unsubscribe(key.id, key.instrument));
-        orderbookSubscriptions.keySet().forEach(key -> unsubscribe(key.id, key.ticker));
+        candleSubscriptions.keySet().forEach(key -> unsubscribeCandle(key.getId(), key.getInstrument()));
+        orderbookSubscriptions.keySet().forEach(key -> unsubscribeOrderbook(key.getId(), key.getTicker()));
     }
 
-    @RequiredArgsConstructor
-    @EqualsAndHashCode
-    private static class InstrumentPerBot {
-        @Nonnull
-        String id;
-        @Nonnull
-        TickerWithInterval instrument;
-    }
-
-    @RequiredArgsConstructor
-    @EqualsAndHashCode
-    private static class TickerPerBot {
-        @Nonnull
-        String id;
-        @Nonnull
-        String ticker;
-    }
 }

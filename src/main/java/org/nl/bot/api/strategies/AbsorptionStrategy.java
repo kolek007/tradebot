@@ -2,6 +2,7 @@ package org.nl.bot.api.strategies;
 
 import org.nl.bot.api.BrokerAdapter;
 import org.nl.bot.api.TickerWithInterval;
+import org.nl.bot.api.Wallet;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -9,8 +10,8 @@ import java.util.UUID;
 
 public class AbsorptionStrategy extends AbstractStrategy {
 
-    public AbsorptionStrategy(List<TickerWithInterval> instruments, BrokerAdapter adapter) {
-        super(instruments, adapter);
+    public AbsorptionStrategy(List<TickerWithInterval> instruments, BrokerAdapter adapter, Wallet wallet) {
+        super(instruments, adapter, wallet);
     }
 
     @Nonnull
@@ -27,6 +28,8 @@ public class AbsorptionStrategy extends AbstractStrategy {
 
     @Override
     public void run() {
+        adapter.subscribeCandle(getId(), instruments.get(0), candleEvent -> {
 
+        });
     }
 }

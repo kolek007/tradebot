@@ -80,39 +80,20 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public Order order(@Nonnull ru.tinkoff.invest.openapi.models.orders.Order order) {
-        return new OrderTkf(order.requestedLots, operation(order.operation), order.price);
+    public PlacedOrder order(@Nonnull ru.tinkoff.invest.openapi.models.orders.Order order) {
+        return PlacedOrderTkf.builder()
+                .id(order.id)
+                .ticker(tickerFigiMapping.getTicker(order.figi))
+                .executedLots(order.executedLots)
+                .requestedLots(order.requestedLots)
+                .operation(operation(order.operation))
+                .status(status(order.status))
+                .build();
     }
 
     @Nonnull
     public LimitOrder limitOrder(@Nonnull Order order) {
         return new LimitOrder(order.getLots(), operation(order.getOperation()), order.getPrice());
-    }
-
-    @Nonnull
-    public CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
-                                                            @Nonnull String ticker) {
-        return new CompletableFuture<PlacedOrder>() {
-            @Override
-            public boolean isDone() {
-                return future.isDone();
-            }
-
-            @Override
-            public PlacedOrder get() throws InterruptedException, ExecutionException {
-                return placedOrder(future.get(), ticker);
-            }
-
-            @Override
-            public PlacedOrder get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                return placedOrder(future.get(timeout, unit), ticker);
-            }
-
-            @Override
-            public PlacedOrder join() {
-                return placedOrder(future.join(), ticker);
-            }
-        };
     }
 
     @Nullable

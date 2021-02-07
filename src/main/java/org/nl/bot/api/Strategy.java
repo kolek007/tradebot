@@ -9,5 +9,8 @@ public interface Strategy extends Runnable {
     @Nonnull
     String getId();
 
+    @Nonnull
+    Wallet wallet();
+
     void stop() throws Exception;
 }
