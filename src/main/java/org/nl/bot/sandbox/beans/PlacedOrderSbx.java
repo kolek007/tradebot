@@ -8,6 +8,7 @@ import org.nl.bot.api.beans.PlacedOrder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 
 @Builder
 @Getter
@@ -36,6 +37,9 @@ public class PlacedOrderSbx implements PlacedOrder {
     @Setter
     @Nonnull
     public Status status;
+
+    @Nonnull
+    public BigDecimal requestedPrice;
 
     /**
      * Код причина отказа в размещении.

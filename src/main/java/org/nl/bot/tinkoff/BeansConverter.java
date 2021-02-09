@@ -13,6 +13,7 @@ import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -157,10 +158,12 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public PlacedOrder placedOrder(@Nonnull ru.tinkoff.invest.openapi.models.orders.PlacedOrder order, @Nonnull String ticker) {
+    public PlacedOrder placedOrder(@Nonnull ru.tinkoff.invest.openapi.models.orders.PlacedOrder order,
+                                   @Nonnull BigDecimal price, @Nonnull String ticker) {
         return PlacedOrderTkf.builder()
                 .id(order.id)
                 .ticker(ticker)
+                .requestedPrice(price)
                 .commission(moneyAmount(order.commission))
                 .executedLots(order.executedLots)
                 .message(order.message)

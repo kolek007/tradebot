@@ -121,7 +121,7 @@ public class TinkoffAdapter implements BrokerAdapter {
             @Nullable String brokerAccountId
     ) {
         final CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future = api.getOrdersContext().placeLimitOrder(tickerFigiMapping.getFigi(ticker), beansConverter.limitOrder(order), null);
-        return placedOrderFuture(future, ticker, botId, ordersManager);
+        return placedOrderFuture(future, ticker, botId, order, ordersManager);
     }
 
     @Nonnull
@@ -192,7 +192,8 @@ public class TinkoffAdapter implements BrokerAdapter {
 
     @Nonnull
     public CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
-                                                            String botId, @Nonnull String ticker, @Nonnull OrdersManager ordersManager) {
+                                                            String botId, @Nonnull String ticker,
+                                                            @Nonnull Order order, @Nonnull OrdersManager ordersManager) {
         return new CompletableFuture<PlacedOrder>() {
             @Override
             public boolean isDone() {
@@ -201,21 +202,21 @@ public class TinkoffAdapter implements BrokerAdapter {
 
             @Override
             public PlacedOrder get() throws InterruptedException, ExecutionException {
-                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(), ticker);
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(), order.getPrice(), ticker);
                 ordersManager.registerOrder(botId, placedOrder.getId());
                 return placedOrder;
             }
 
             @Override
             public PlacedOrder get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(timeout, unit), ticker);
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(timeout, unit), order.getPrice(), ticker);
                 ordersManager.registerOrder(botId, placedOrder.getId());
                 return placedOrder;
             }
 
             @Override
             public PlacedOrder join() {
-                final PlacedOrder placedOrder = beansConverter.placedOrder(future.join(), ticker);
+                final PlacedOrder placedOrder = beansConverter.placedOrder(future.join(), order.getPrice(), ticker);
                 ordersManager.registerOrder(botId, placedOrder.getId());
                 return placedOrder;
             }

@@ -1,12 +1,12 @@
 package org.nl.bot.api.beans;
 
-import lombok.*;
 import org.nl.bot.api.MoneyAmount;
 import org.nl.bot.api.Operation;
 import org.nl.bot.api.Status;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.math.BigDecimal;
 
 public interface PlacedOrder {
 
@@ -30,6 +30,9 @@ public interface PlacedOrder {
      */
     @Nonnull
     Status getStatus();
+
+    @Nonnull
+    BigDecimal getRequestedPrice();
 
     /**
      * Код причина отказа в размещении.

@@ -42,7 +42,15 @@ public class WalletImpl implements Wallet, EventListener<OrderUpdateEvent> {
 
     @Override
     public void onEvent(OrderUpdateEvent event) {
-        //todo compute amounts
-        orders.put(event.getOrder().getId(), event.getOrder());
+        PlacedOrder order = event.getOrder();
+        orders.put(order.getId(), order);
+        if(order.getOperation() == Operation.Buy) {
+            withdraw(order.getRequestedPrice().multiply(BigDecimal.valueOf(order.getRequestedLots())));
+        } else {
+            enroll(order.getRequestedPrice().multiply(BigDecimal.valueOf(order.getRequestedLots())));
+        }
+        if(order.getCommission() != null) {
+            withdraw(order.getCommission().getValue());
+        }
     }
 }

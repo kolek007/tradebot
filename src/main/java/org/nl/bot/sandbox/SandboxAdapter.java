@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.nl.bot.api.*;
+import org.nl.bot.api.Currency;
+import org.nl.bot.api.EventListener;
 import org.nl.bot.api.beans.Order;
 import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.api.beans.PlacedOrder;
@@ -12,16 +14,13 @@ import org.nl.bot.sandbox.beans.PlacedOrderSbx;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 @RequiredArgsConstructor
 @Slf4j
 public class SandboxAdapter implements BrokerAdapter {
-    public static final BigDecimal COMISSION = BigDecimal.valueOf(0.002);
+    public static final BigDecimal COMMISSION = BigDecimal.valueOf(0.002);
     @Nonnull
     private final BrokerAdapter adapter;
 
@@ -29,7 +28,10 @@ public class SandboxAdapter implements BrokerAdapter {
     private final ConcurrentHashMap<String, Pair<Order, PlacedOrderSbx>> created = new ConcurrentHashMap<>();
     @Nonnull
     private final ConcurrentHashMap<String, PlacedOrderSbx> completed = new ConcurrentHashMap<>();
-
+    @Nonnull
+    private final Map<String, EventListener<OrderUpdateEvent>> botSubscriptions = new ConcurrentHashMap<>();
+    @Nonnull
+    private final Map<String, String> orders2bot = new ConcurrentHashMap<>();
     @Nonnull
     private final LinkedBlockingQueue<String> processingQueue = new LinkedBlockingQueue<>();
 
@@ -40,6 +42,7 @@ public class SandboxAdapter implements BrokerAdapter {
 
     public void destroy() {
         interrupt = true;
+        botSubscriptions.keySet().forEach(this::unsubscribeFromOrdersUpdate);
     }
 
     public void init() {
@@ -57,7 +60,7 @@ public class SandboxAdapter implements BrokerAdapter {
                     }
                     PlacedOrderSbx placedOrder = orderPair.getValue();
                     Order order = orderPair.getKey();
-                    synchronized (orderId) {
+                    synchronized (Objects.requireNonNull(orderId)) {
                         final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 7);
                         final Optional<Orderbook> orderbook = future.join();
                         List<Orderbook.Item> items = new ArrayList<>();
@@ -72,14 +75,14 @@ public class SandboxAdapter implements BrokerAdapter {
                                         if(placedOrder.commission == null) {
                                             placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
                                         }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMISSION));
+                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMMISSION));
                                     } else {
                                         placedOrder.executedLots += item.getQuantity().intValue();
                                         placedOrder.requestedLots -= item.getQuantity().intValue();
                                         if(placedOrder.commission == null) {
                                             placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
                                         }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMISSION));
+                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
                                     }
                                 }
                             }
@@ -93,14 +96,14 @@ public class SandboxAdapter implements BrokerAdapter {
                                         if(placedOrder.commission == null) {
                                             placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
                                         }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMISSION));
+                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMMISSION));
                                     } else {
                                         placedOrder.executedLots += item.getQuantity().intValue();
                                         placedOrder.requestedLots -= item.getQuantity().intValue();
                                         if(placedOrder.commission == null) {
                                             placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
                                         }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMISSION));
+                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
                                     }
                                 }
                             }
@@ -113,10 +116,16 @@ public class SandboxAdapter implements BrokerAdapter {
                                 log.error("Error on put to queue", e);
                             }
                         } else {
+                            final String botId = orders2bot.remove(orderId);
+                            if(botId != null) {
+                                final EventListener<OrderUpdateEvent> listener = botSubscriptions.get(botId);
+                                if (listener != null) {
+                                    listener.onEvent(new OrderUpdateEvent(placedOrder));
+                                }
+                            }
                             completed.put(orderId, placedOrder);
                         }
                     }
-
                 }
             }
         });
@@ -156,24 +165,29 @@ public class SandboxAdapter implements BrokerAdapter {
                 .requestedLots(marketOrder.getLots())
                 .operation(marketOrder.getOperation())
                 .build();
-        created.put(placedOrder.getId(), new Pair<>(marketOrder, placedOrder));
-        try {
-            processingQueue.put(placedOrder.getId());
-        } catch (InterruptedException e) {
-            log.error("Error on put to queue", e);
+        String orderId = placedOrder.getId();
+        synchronized (Objects.requireNonNull(orderId)) {
+            created.put(orderId, new Pair<>(marketOrder, placedOrder));
+            registerOrder(botId, orderId);
+            try {
+                processingQueue.put(orderId);
+            } catch (InterruptedException e) {
+                log.error("Error on put to queue", e);
+            }
+            future.complete(placedOrder);
+            return future;
         }
-        future.complete(placedOrder);
-        return future;
     }
 
     @Nonnull
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
-        synchronized (orderId) {
+        synchronized (Objects.requireNonNull(orderId)) {
             final Pair<Order, PlacedOrderSbx> pair = created.get(orderId);
             if(pair != null) {
                 pair.getValue().status = Status.Cancelled;
                 completed.put(orderId, pair.getValue());
+                cancelOrder(orderId);
             }
             final CompletableFuture<Void> future = new CompletableFuture<>();
             future.complete(null);
@@ -187,13 +201,26 @@ public class SandboxAdapter implements BrokerAdapter {
         return adapter.getOrderbook(ticker, depth);
     }
 
+    public void registerOrder(@Nonnull String botId, @Nonnull String orderId) {
+        synchronized (Objects.requireNonNull(orderId)) {
+            orders2bot.put(orderId, botId);
+        }
+    }
+
+    public void cancelOrder(@Nonnull String orderId) {
+        synchronized (Objects.requireNonNull(orderId)) {
+            orders2bot.remove(orderId);
+        }
+    }
+
     @Override
     public void subscribeOnOrdersUpdate(@Nonnull String botId, @Nonnull EventListener<OrderUpdateEvent> listener) {
-        //TODO
+        botSubscriptions.put(botId, listener);
     }
 
     @Override
     public void unsubscribeFromOrdersUpdate(@Nonnull String botId) {
-        //TODO
+        botSubscriptions.remove(botId);
     }
+
 }
