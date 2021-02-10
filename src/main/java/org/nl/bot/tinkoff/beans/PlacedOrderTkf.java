@@ -41,7 +41,7 @@ public class PlacedOrderTkf implements PlacedOrder {
     public Status status;
 
     @Nonnull
-    public BigDecimal requestedPrice;
+    public BigDecimal price;
 
     /**
      * Код причина отказа в размещении.
@@ -58,7 +58,7 @@ public class PlacedOrderTkf implements PlacedOrder {
     /**
      * Желаемое количество лотов.
      */
-    public int requestedLots;
+    public int lots;
 
     /**
      * Реально исполненное количество лотов.

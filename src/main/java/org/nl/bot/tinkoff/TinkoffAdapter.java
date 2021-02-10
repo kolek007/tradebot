@@ -203,21 +203,21 @@ public class TinkoffAdapter implements BrokerAdapter {
             @Override
             public PlacedOrder get() throws InterruptedException, ExecutionException {
                 final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(), order.getPrice(), ticker);
-                ordersManager.registerOrder(botId, placedOrder.getId());
+                ordersManager.registerOrder(botId, placedOrder);
                 return placedOrder;
             }
 
             @Override
             public PlacedOrder get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
                 final PlacedOrder placedOrder = beansConverter.placedOrder(future.get(timeout, unit), order.getPrice(), ticker);
-                ordersManager.registerOrder(botId, placedOrder.getId());
+                ordersManager.registerOrder(botId, placedOrder);
                 return placedOrder;
             }
 
             @Override
             public PlacedOrder join() {
                 final PlacedOrder placedOrder = beansConverter.placedOrder(future.join(), order.getPrice(), ticker);
-                ordersManager.registerOrder(botId, placedOrder.getId());
+                ordersManager.registerOrder(botId, placedOrder);
                 return placedOrder;
             }
         };

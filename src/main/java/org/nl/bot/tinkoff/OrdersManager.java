@@ -10,6 +10,7 @@ import ru.tinkoff.invest.openapi.OpenApi;
 import ru.tinkoff.invest.openapi.models.orders.Order;
 
 import javax.annotation.Nonnull;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,14 +29,14 @@ public class OrdersManager implements OrdersSubscriber {
     @Nonnull
     private final Map<String, EventListener<OrderUpdateEvent>> botSubscriptions = new ConcurrentHashMap<>();
     @Nonnull
-    private final Map<String, String> orders2bot = new ConcurrentHashMap<>();
+    private final Map<String, BotAndPrice> orders = new ConcurrentHashMap<>();
 
-    public void registerOrder(@Nonnull String botId, @Nonnull String orderId) {
-        orders2bot.put(orderId, botId);
+    public void registerOrder(@Nonnull String botId, @Nonnull PlacedOrder order) {
+        orders.put(order.getId(), new BotAndPrice(botId, order.getPrice()));
     }
 
     public void cancelOrder(@Nonnull String orderId) {
-        orders2bot.remove(orderId);
+        orders.remove(orderId);
     }
 
     @Override
@@ -53,16 +54,15 @@ public class OrdersManager implements OrdersSubscriber {
             final List<Order> currentOrders = api.getOrdersContext().getOrders(null).join();
             currentOrders.forEach(o -> {
                 final String orderId = o.id;
-                final String botId = orders2bot.get(orderId);
-                if(botId != null) {
-                    final EventListener<OrderUpdateEvent> listener = botSubscriptions.get(botId);
-                    if (listener != null) {
-                        final PlacedOrder order = converter.order(o);
-                        if(order.getStatus() == Status.Cancelled || order.getStatus() == Status.Rejected) {
-                            orders2bot.remove(orderId);
-                        }
-                        listener.onEvent(new OrderUpdateEvent(order));
+                final BotAndPrice botAndPrice = orders.get(orderId);
+                String botId = botAndPrice.botId;
+                final EventListener<OrderUpdateEvent> listener = botSubscriptions.get(botId);
+                if (listener != null) {
+                    final PlacedOrder order = converter.order(o, botAndPrice.price);
+                    if(order.getStatus() == Status.Cancelled || order.getStatus() == Status.Rejected) {
+                        orders.remove(orderId);
                     }
+                    listener.onEvent(new OrderUpdateEvent(order));
                 }
             });
         }, 100, TimeUnit.MILLISECONDS);
@@ -70,5 +70,13 @@ public class OrdersManager implements OrdersSubscriber {
 
     public void destroy() {
         botSubscriptions.keySet().forEach(this::unsubscribeFromOrdersUpdate);
+    }
+
+    @RequiredArgsConstructor
+    private static class BotAndPrice {
+        @Nonnull
+        String botId;
+        @Nonnull
+        BigDecimal price;
     }
 }

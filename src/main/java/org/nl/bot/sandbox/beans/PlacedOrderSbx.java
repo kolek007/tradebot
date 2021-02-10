@@ -39,7 +39,7 @@ public class PlacedOrderSbx implements PlacedOrder {
     public Status status;
 
     @Nonnull
-    public BigDecimal requestedPrice;
+    public BigDecimal price;
 
     /**
      * Код причина отказа в размещении.
@@ -59,7 +59,7 @@ public class PlacedOrderSbx implements PlacedOrder {
      * Желаемое количество лотов.
      */
     @Setter
-    public int requestedLots;
+    public int lots;
 
     /**
      * Реально исполненное количество лотов.

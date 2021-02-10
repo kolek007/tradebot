@@ -44,13 +44,15 @@ public class WalletImpl implements Wallet, EventListener<OrderUpdateEvent> {
     public void onEvent(OrderUpdateEvent event) {
         PlacedOrder order = event.getOrder();
         orders.put(order.getId(), order);
-        if(order.getOperation() == Operation.Buy) {
-            withdraw(order.getRequestedPrice().multiply(BigDecimal.valueOf(order.getRequestedLots())));
-        } else {
-            enroll(order.getRequestedPrice().multiply(BigDecimal.valueOf(order.getRequestedLots())));
-        }
-        if(order.getCommission() != null) {
-            withdraw(order.getCommission().getValue());
+        if(order.getExecutedLots() == order.getLots()) { //Order executed completely
+            if (order.getOperation() == Operation.Buy) {
+                withdraw(order.getPrice().multiply(BigDecimal.valueOf(order.getLots())));
+            } else {
+                enroll(order.getPrice().multiply(BigDecimal.valueOf(order.getLots())));
+            }
+            if (order.getCommission() != null) {
+                withdraw(order.getCommission().getValue());
+            }
         }
     }
 }

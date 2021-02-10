@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 
-public interface PlacedOrder {
+public interface PlacedOrder extends Order {
 
     @Nonnull
     String getTicker();
@@ -20,19 +20,10 @@ public interface PlacedOrder {
     String getId();
 
     /**
-     * Тип операции.
-     */
-    @Nonnull
-    Operation getOperation();
-
-    /**
      * Текущий статус.
      */
     @Nonnull
     Status getStatus();
-
-    @Nonnull
-    BigDecimal getRequestedPrice();
 
     /**
      * Код причина отказа в размещении.
@@ -45,11 +36,6 @@ public interface PlacedOrder {
      */
     @Nullable
     String getMessage();
-
-    /**
-     * Желаемое количество лотов.
-     */
-    int getRequestedLots();
 
     /**
      * Реально исполненное количество лотов.

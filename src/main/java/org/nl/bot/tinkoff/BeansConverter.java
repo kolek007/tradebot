@@ -81,14 +81,15 @@ public class BeansConverter {
     }
 
     @Nonnull
-    public PlacedOrder order(@Nonnull ru.tinkoff.invest.openapi.models.orders.Order order) {
+    public PlacedOrder order(@Nonnull ru.tinkoff.invest.openapi.models.orders.Order order, @Nonnull BigDecimal price) {
         return PlacedOrderTkf.builder()
                 .id(order.id)
                 .ticker(tickerFigiMapping.getTicker(order.figi))
                 .executedLots(order.executedLots)
-                .requestedLots(order.requestedLots)
+                .lots(order.requestedLots)
                 .operation(operation(order.operation))
                 .status(status(order.status))
+                .price(price)
                 .build();
     }
 
@@ -163,11 +164,11 @@ public class BeansConverter {
         return PlacedOrderTkf.builder()
                 .id(order.id)
                 .ticker(ticker)
-                .requestedPrice(price)
+                .price(price)
                 .commission(moneyAmount(order.commission))
                 .executedLots(order.executedLots)
                 .message(order.message)
-                .requestedLots(order.requestedLots)
+                .lots(order.requestedLots)
                 .rejectReason(order.rejectReason)
                 .status(status(order.status))
                 .build();

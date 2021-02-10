@@ -25,9 +25,7 @@ public class SandboxAdapter implements BrokerAdapter {
     private final BrokerAdapter adapter;
 
     @Nonnull
-    private final ConcurrentHashMap<String, Pair<Order, PlacedOrderSbx>> created = new ConcurrentHashMap<>();
-    @Nonnull
-    private final ConcurrentHashMap<String, PlacedOrderSbx> completed = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, PlacedOrderSbx> created = new ConcurrentHashMap<>();
     @Nonnull
     private final Map<String, EventListener<OrderUpdateEvent>> botSubscriptions = new ConcurrentHashMap<>();
     @Nonnull
@@ -54,68 +52,29 @@ public class SandboxAdapter implements BrokerAdapter {
                     if(orderId == null) {
                         continue;
                     }
-                    final Pair<Order, PlacedOrderSbx> orderPair = created.get(orderId);
-                    if(orderPair == null) {
+                    final PlacedOrderSbx placedOrder = created.get(orderId);
+                    if(placedOrder == null) {
                         continue;
                     }
-                    PlacedOrderSbx placedOrder = orderPair.getValue();
-                    Order order = orderPair.getKey();
                     synchronized (Objects.requireNonNull(orderId)) {
                         final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 7);
                         final Optional<Orderbook> orderbook = future.join();
                         List<Orderbook.Item> items = new ArrayList<>();
-                        BigDecimal moneyAmount = new BigDecimal(0);
-                        if(order.getOperation() == Operation.Buy) {
+                        if(placedOrder.getOperation() == Operation.Buy) {
                             orderbook.ifPresent(ob -> items.addAll(ob.getBids()));
-                            for (Orderbook.Item item : items) {
-                                if(item.getPrice().compareTo(order.getPrice()) <= 0) {
-                                    if(item.getQuantity().intValue() >= (placedOrder.requestedLots - placedOrder.executedLots)) {
-                                        placedOrder.executedLots += placedOrder.requestedLots;
-                                        placedOrder.requestedLots = 0;
-                                        if(placedOrder.commission == null) {
-                                            placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
-                                        }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMMISSION));
-                                    } else {
-                                        placedOrder.executedLots += item.getQuantity().intValue();
-                                        placedOrder.requestedLots -= item.getQuantity().intValue();
-                                        if(placedOrder.commission == null) {
-                                            placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
-                                        }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
-                                    }
-                                }
-                            }
+                            executeBuy(placedOrder, items);
                         } else {
                             orderbook.ifPresent(ob -> items.addAll(ob.getAsks()));
-                            for (Orderbook.Item item : items) {
-                                if(item.getPrice().compareTo(order.getPrice()) >= 0) {
-                                    if(item.getQuantity().intValue() >= (placedOrder.requestedLots - placedOrder.executedLots)) {
-                                        placedOrder.executedLots += placedOrder.requestedLots;
-                                        placedOrder.requestedLots = 0;
-                                        if(placedOrder.commission == null) {
-                                            placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
-                                        }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.requestedLots)).multiply(COMMISSION));
-                                    } else {
-                                        placedOrder.executedLots += item.getQuantity().intValue();
-                                        placedOrder.requestedLots -= item.getQuantity().intValue();
-                                        if(placedOrder.commission == null) {
-                                            placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
-                                        }
-                                        placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
-                                    }
-                                }
-                            }
+                            executeSell(placedOrder, items);
                         }
-                        if(placedOrder.requestedLots != 0) {
-                            created.put(orderId, orderPair);
+                        if(placedOrder.lots != 0) { //Order updated but not executed completely
+                            created.put(orderId, placedOrder);
                             try {
                                 processingQueue.put(orderId);
                             } catch (InterruptedException e) {
                                 log.error("Error on put to queue", e);
                             }
-                        } else {
+                        } else { //Order executed completely
                             final String botId = orders2bot.remove(orderId);
                             if(botId != null) {
                                 final EventListener<OrderUpdateEvent> listener = botSubscriptions.get(botId);
@@ -123,7 +82,6 @@ public class SandboxAdapter implements BrokerAdapter {
                                     listener.onEvent(new OrderUpdateEvent(placedOrder));
                                 }
                             }
-                            completed.put(orderId, placedOrder);
                         }
                     }
                 }
@@ -132,6 +90,50 @@ public class SandboxAdapter implements BrokerAdapter {
         //TODO temp code for testing, remove this
         subscribeCandle("TEST", new TickerWithInterval("AAPL", Interval.MIN_1), element -> log.info("Пришло новое событие из Candle API\n {}", element));
         subscribeOrderbook("TEST", "AAPL", element -> log.info("Пришло новое событие из Orderbook API\n {}", element.getOrderbook()));
+    }
+
+    private void executeSell(PlacedOrderSbx placedOrder, List<Orderbook.Item> items) {
+        for (Orderbook.Item item : items) {
+            if(item.getPrice().compareTo(placedOrder.getPrice()) >= 0) {
+                if(item.getQuantity().intValue() >= (placedOrder.lots - placedOrder.executedLots)) {
+                    placedOrder.executedLots += placedOrder.lots;
+                    placedOrder.lots = 0;
+                    if(placedOrder.commission == null) {
+                        placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
+                    }
+                    placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.lots)).multiply(COMMISSION));
+                } else {
+                    placedOrder.executedLots += item.getQuantity().intValue();
+                    placedOrder.lots -= item.getQuantity().intValue();
+                    if(placedOrder.commission == null) {
+                        placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
+                    }
+                    placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
+                }
+            }
+        }
+    }
+
+    private void executeBuy(PlacedOrderSbx placedOrder, List<Orderbook.Item> items) {
+        for (Orderbook.Item item : items) {
+            if(item.getPrice().compareTo(placedOrder.getPrice()) <= 0) {
+                if(item.getQuantity().intValue() >= (placedOrder.lots - placedOrder.executedLots)) {
+                    placedOrder.executedLots += placedOrder.lots;
+                    placedOrder.lots = 0;
+                    if(placedOrder.commission == null) {
+                        placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
+                    }
+                    placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(BigDecimal.valueOf(placedOrder.lots)).multiply(COMMISSION));
+                } else {
+                    placedOrder.executedLots += item.getQuantity().intValue();
+                    placedOrder.lots -= item.getQuantity().intValue();
+                    if(placedOrder.commission == null) {
+                        placedOrder.commission = new MoneyAmount(Currency.USD, BigDecimal.ZERO);
+                    }
+                    placedOrder.commission.value = placedOrder.commission.value.add(item.getPrice().multiply(item.getQuantity()).multiply(COMMISSION));
+                }
+            }
+        }
     }
 
     @Override
@@ -156,18 +158,19 @@ public class SandboxAdapter implements BrokerAdapter {
 
     @Nonnull
     @Override
-    public CompletableFuture<PlacedOrder> placeOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull Order marketOrder, @Nullable String brokerAccountId) {
+    public CompletableFuture<PlacedOrder> placeOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull Order limitOrder, @Nullable String brokerAccountId) {
         CompletableFuture<PlacedOrder> future = new CompletableFuture<>();
         final PlacedOrderSbx placedOrder = PlacedOrderSbx.builder()
                 .ticker(ticker)
                 .status(Status.New)
                 .id(UUID.randomUUID().toString())
-                .requestedLots(marketOrder.getLots())
-                .operation(marketOrder.getOperation())
+                .lots(limitOrder.getLots())
+                .operation(limitOrder.getOperation())
+                .price(limitOrder.getPrice())
                 .build();
         String orderId = placedOrder.getId();
         synchronized (Objects.requireNonNull(orderId)) {
-            created.put(orderId, new Pair<>(marketOrder, placedOrder));
+            created.put(orderId, placedOrder);
             registerOrder(botId, orderId);
             try {
                 processingQueue.put(orderId);
@@ -183,10 +186,9 @@ public class SandboxAdapter implements BrokerAdapter {
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
         synchronized (Objects.requireNonNull(orderId)) {
-            final Pair<Order, PlacedOrderSbx> pair = created.get(orderId);
-            if(pair != null) {
-                pair.getValue().status = Status.Cancelled;
-                completed.put(orderId, pair.getValue());
+            final PlacedOrderSbx order = created.get(orderId);
+            if(order != null) {
+                order.status = Status.Cancelled;
                 cancelOrder(orderId);
             }
             final CompletableFuture<Void> future = new CompletableFuture<>();
