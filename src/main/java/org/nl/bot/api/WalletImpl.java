@@ -13,8 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Builder
 public class WalletImpl implements Wallet, EventListener<OrderUpdateEvent> {
     @Nonnull
-    private final BrokerAdapter adapter;
-    @Nonnull
     @Getter
     private final BigDecimal initialAmount;
     @Nullable

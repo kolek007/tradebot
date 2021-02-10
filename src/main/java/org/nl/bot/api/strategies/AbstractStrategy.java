@@ -21,10 +21,6 @@ public abstract class AbstractStrategy implements Strategy {
     @Getter
     protected final Wallet wallet;
 
-    @Nonnull
-    @Override
-    public abstract String getId();
-
     @Override
     public abstract void run();
 
@@ -32,6 +28,8 @@ public abstract class AbstractStrategy implements Strategy {
     public void stop() throws Exception {
         final String id = getId();
         instruments.forEach(instr -> adapter.unsubscribeCandle(id, instr));
+        instruments.forEach(instr -> adapter.unsubscribeOrderbook(id, instr.getTicker()));
+        instruments.forEach(instr -> adapter.unsubscribeFromOrdersUpdate(id));
         for(String orderId : getWallet().getOrders().keySet()) {
             adapter.cancelOrder(id, orderId, null);
         }
@@ -41,5 +39,15 @@ public abstract class AbstractStrategy implements Strategy {
     @Override
     public Wallet wallet() {
         return wallet;
+    }
+
+    @Nonnull
+    @Override
+    public abstract String getId();
+
+    public String instruments() {
+        StringBuilder builder = new StringBuilder();
+        this.instruments.forEach(builder::append);
+        return builder.toString();
     }
 }

@@ -23,6 +23,8 @@ public class SandboxAdapter implements BrokerAdapter {
     public static final BigDecimal COMMISSION = BigDecimal.valueOf(0.002);
     @Nonnull
     private final BrokerAdapter adapter;
+    @Nonnull
+    private final Executor executor;
 
     @Nonnull
     private final ConcurrentHashMap<String, PlacedOrderSbx> created = new ConcurrentHashMap<>();
@@ -34,9 +36,6 @@ public class SandboxAdapter implements BrokerAdapter {
     private final LinkedBlockingQueue<String> processingQueue = new LinkedBlockingQueue<>();
 
     private volatile boolean interrupt = false;
-
-    @Nonnull
-    private final Executor executor = Executors.newSingleThreadExecutor();
 
     public void destroy() {
         interrupt = true;
@@ -87,9 +86,6 @@ public class SandboxAdapter implements BrokerAdapter {
                 }
             }
         });
-        //TODO temp code for testing, remove this
-        subscribeCandle("TEST", new TickerWithInterval("AAPL", Interval.MIN_1), element -> log.info("Пришло новое событие из Candle API\n {}", element));
-        subscribeOrderbook("TEST", "AAPL", element -> log.info("Пришло новое событие из Orderbook API\n {}", element.getOrderbook()));
     }
 
     private void executeSell(PlacedOrderSbx placedOrder, List<Orderbook.Item> items) {

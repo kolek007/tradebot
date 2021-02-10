@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nonnull;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -14,9 +13,9 @@ public class BotManager {
     @Nonnull
     private final ConcurrentHashMap<String, Strategy> runningBots = new ConcurrentHashMap<>();
 
-    public void run(@Nonnull Strategy strategy) throws Exception {
+    public void run(@Nonnull Strategy strategy) {
         runningBots.put(strategy.getId(), strategy);
-        Executors.newSingleThreadExecutor().submit(strategy);
+        strategy.run();
     }
 
     public void stop(@Nonnull String name) throws Exception {

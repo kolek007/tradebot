@@ -1,22 +1,18 @@
 package org.nl.bot.api;
 
 public enum Interval {
-    MIN_1(1), MIN_5(5), MIN_15(15), MIN_30(30), HOUR_1(60), DAY_1(24*60), WEEK(24*60*7), MONTH(24*60*7*4), YEAR_1(24*60*365);
+    MIN_1("1_min"), MIN_5("5_min"), MIN_15("15_min"), MIN_30("30_min"), HOUR_1("1_hour"), DAY_1("1_day"), WEEK("1_week"), MONTH("1_month");
 
-    private final int minutes;
+    private final String name;
 
-    Interval(int minutes) {
-        this.minutes = minutes;
-    }
-
-    public int getMinutes() {
-        return minutes;
+    Interval(String name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
         return "Interval{" +
-                "minutes=" + minutes +
+                "name='" + name + '\'' +
                 '}';
     }
 }

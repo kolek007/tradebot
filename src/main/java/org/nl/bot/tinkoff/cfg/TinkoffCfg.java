@@ -1,16 +1,21 @@
 package org.nl.bot.tinkoff.cfg;
 
 import org.nl.bot.api.BotManager;
+import org.nl.bot.api.Interval;
 import org.nl.bot.api.strategies.StrategiesFactory;
 import org.nl.bot.sandbox.SandboxAdapter;
 import org.nl.bot.tinkoff.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import ru.tinkoff.invest.openapi.OpenApi;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Configuration
 public class TinkoffCfg {
@@ -28,7 +33,7 @@ public class TinkoffCfg {
 
     @Bean(destroyMethod = "destroy")
     OpenApiFactory openApiFactory() {
-        return new OpenApiFactory(ssoToken, sandbox);
+        return new OpenApiFactory(ssoToken, sandbox, threadPool());
     }
 
     @Bean
@@ -43,12 +48,12 @@ public class TinkoffCfg {
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     SandboxAdapter sandboxAdapter() {
-        return new SandboxAdapter(tinkoffAdapter());
+        return new SandboxAdapter(tinkoffAdapter(), threadPool());
     }
 
     @Bean
     TinkoffSubscriber tkfSubscriber() {
-        return new TinkoffSubscriber(Executors.newSingleThreadExecutor(), beansConverter());
+        return new TinkoffSubscriber(threadPool(), beansConverter());
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
@@ -73,6 +78,16 @@ public class TinkoffCfg {
 
     @Bean
     StrategiesFactory strategiesFactory() {
-        return new StrategiesFactory(tinkoffAdapter());
+        return new StrategiesFactory();
+    }
+
+    @Bean(initMethod = "init")
+    TinkoffBotsEntryPoint tinkoffBotsEntryPoint() {
+        return new TinkoffBotsEntryPoint(botManager(), strategiesFactory(), sandboxAdapter(), tickers, Arrays.stream(candleIntervals).map(Interval::valueOf).collect(Collectors.toList()));
+    }
+
+    @Bean
+    Executor threadPool() {
+        return Executors.newCachedThreadPool();
     }
 }

@@ -8,6 +8,7 @@ import ru.tinkoff.invest.openapi.okhttp.OkHttpOpenApiFactory;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -18,6 +19,9 @@ public class OpenApiFactory {
     private final String ssoToken;
     @Nonnull
     private final Boolean sandbox;
+    @Nonnull
+    private final Executor executor;
+
     private final CopyOnWriteArrayList<OpenApi> connections = new CopyOnWriteArrayList<>();
 
     @Nonnull
@@ -28,11 +32,11 @@ public class OpenApiFactory {
         OpenApi api;
         log.info("Creating connection... ");
         if (sandbox) {
-            api = factory.createSandboxOpenApiClient(Executors.newSingleThreadExecutor());
+            api = factory.createSandboxOpenApiClient(executor);
             // ОБЯЗАТЕЛЬНО нужно выполнить регистрацию в "песочнице"
             ((SandboxOpenApi) api).getSandboxContext().performRegistration(null).join();
         } else {
-            api = factory.createOpenApiClient(Executors.newSingleThreadExecutor());
+            api = factory.createOpenApiClient(executor);
         }
         connections.add(api);
         return api;
