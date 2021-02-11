@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.nl.bot.api.*;
+import org.nl.bot.api.beans.Candle;
 import org.nl.bot.api.beans.Order;
 import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.api.beans.PlacedOrder;
 import ru.tinkoff.invest.openapi.OpenApi;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
+import ru.tinkoff.invest.openapi.models.market.HistoricalCandles;
 import ru.tinkoff.invest.openapi.models.market.Instrument;
 import ru.tinkoff.invest.openapi.models.market.InstrumentsList;
 import ru.tinkoff.invest.openapi.models.portfolio.Portfolio;
@@ -16,9 +18,12 @@ import ru.tinkoff.invest.openapi.models.portfolio.PortfolioCurrencies;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingRequest;
 
 import javax.annotation.Nonnull;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -231,5 +236,36 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Override
     public void unsubscribeFromOrdersUpdate(@Nonnull String botId) {
         ordersManager.unsubscribeFromOrdersUpdate(botId);
+    }
+
+    @Nonnull
+    public CompletableFuture<Optional<List<Candle>>> getHistoricalCandles(@Nonnull String ticker,
+                                                                @Nonnull OffsetDateTime from,
+                                                                @Nonnull OffsetDateTime to,
+                                                                @Nonnull Interval interval) {
+        CompletableFuture<Optional<HistoricalCandles>> marketCandles = api.getMarketContext().getMarketCandles(
+                Objects.requireNonNull(getInstrument(ticker)).figi,
+                from, to, beansConverter.candleInterval(interval));
+        return new CompletableFuture<Optional<List<Candle>>>() {
+            @Override
+            public boolean isDone() {
+                return marketCandles.isDone();
+            }
+
+            @Override
+            public Optional<List<Candle>> get() throws InterruptedException, ExecutionException {
+                return beansConverter.candles(marketCandles.get());
+            }
+
+            @Override
+            public Optional<List<Candle>> get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return beansConverter.candles(marketCandles.get(timeout, unit));
+            }
+
+            @Override
+            public Optional<List<Candle>> join() {
+                return beansConverter.candles(marketCandles.join());
+            }
+        };
     }
 }

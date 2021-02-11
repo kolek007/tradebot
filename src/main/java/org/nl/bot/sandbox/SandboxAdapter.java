@@ -1,12 +1,12 @@
 package org.nl.bot.sandbox;
 
-import javafx.util.Pair;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
-import org.nl.bot.api.*;
 import org.nl.bot.api.Currency;
 import org.nl.bot.api.EventListener;
+import org.nl.bot.api.*;
+import org.nl.bot.api.beans.Candle;
 import org.nl.bot.api.beans.Order;
 import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.api.beans.PlacedOrder;
@@ -14,8 +14,12 @@ import org.nl.bot.sandbox.beans.PlacedOrderSbx;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -221,4 +225,9 @@ public class SandboxAdapter implements BrokerAdapter {
         botSubscriptions.remove(botId);
     }
 
+    @Nonnull
+    @Override
+    public CompletableFuture<Optional<List<Candle>>> getHistoricalCandles(@Nonnull String ticker, @Nonnull OffsetDateTime from, @Nonnull OffsetDateTime to, @Nonnull Interval interval) {
+        return adapter.getHistoricalCandles(ticker, from, to, interval);
+    }
 }

@@ -8,17 +8,22 @@ import org.nl.bot.api.beans.Orderbook;
 import org.nl.bot.api.beans.PlacedOrder;
 import org.nl.bot.tinkoff.beans.*;
 import ru.tinkoff.invest.openapi.models.market.CandleInterval;
+import ru.tinkoff.invest.openapi.models.market.HistoricalCandles;
 import ru.tinkoff.invest.openapi.models.orders.LimitOrder;
 import ru.tinkoff.invest.openapi.models.streaming.StreamingEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class BeansConverter {
@@ -78,6 +83,26 @@ public class BeansConverter {
                 .dateTime(candle.getDateTime())
                 .tradingValue(candle.getTradingValue())
                 .build();
+    }
+
+    @Nonnull
+    public Candle candle(@Nonnull ru.tinkoff.invest.openapi.models.market.Candle candle) {
+        final CandleInterval interval = candle.interval;
+        return CandleTkf.builder()
+                .interval(candleInterval(interval))
+                .ticker(tickerFigiMapping.getTicker(candle.figi))
+                .openPrice(candle.openPrice)
+                .closingPrice(candle.closePrice)
+                .highestPrice(candle.highestPrice)
+                .lowestPrice(candle.lowestPrice)
+                .dateTime(candle.time.atZoneSameInstant(ZoneId.systemDefault()))
+                .tradingValue(candle.tradesValue)
+                .build();
+    }
+
+    @Nonnull
+    public Optional<List<Candle>> candles(@Nonnull Optional<HistoricalCandles> historicalCandlesOptional) {
+        return historicalCandlesOptional.map(candles -> candles.candles.stream().map(this::candle).collect(Collectors.toList()));
     }
 
     @Nonnull
