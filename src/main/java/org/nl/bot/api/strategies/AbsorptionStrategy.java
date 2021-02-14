@@ -78,7 +78,7 @@ public class AbsorptionStrategy extends AbstractStrategy {
                 BigDecimal firstHeight = height(first);
                 BigDecimal secondHeight = height(second);
                 if(green(second) && meetsRequirements(second) && weakEqual(firstHeight, secondHeight, ERROR_PERCENTAGE)) { //main strategy condition met, need to buy
-                    BigDecimal price = candle.getHighestPrice();
+                    BigDecimal price = candle.getClosingPrice();
                     BigDecimal takeProfit = price.add(secondHeight.multiply(BigDecimal.valueOf(TAKE_PROFIT_PERCENTAGE)));
                     BigDecimal stopLoss = price.subtract(secondHeight.multiply(BigDecimal.valueOf(STOP_LOSS_PERCENTAGE)));
                     adapter.placeOrder(getId(), instrument.getTicker(), new OrderTkf(1, Operation.Buy, price), null).join(); //TODO need to think about price and lots amount
