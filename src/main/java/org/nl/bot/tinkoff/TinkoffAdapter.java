@@ -125,6 +125,7 @@ public class TinkoffAdapter implements BrokerAdapter {
             @Nonnull Order order,
             @Nullable String brokerAccountId
     ) {
+        log.info("Bot {} placed order {} on ticker {}", botId, order, ticker);
         final CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future = api.getOrdersContext().placeLimitOrder(tickerFigiMapping.getFigi(ticker), beansConverter.limitOrder(order), null);
         return placedOrderFuture(future, ticker, botId, order, ordersManager);
     }
@@ -132,6 +133,7 @@ public class TinkoffAdapter implements BrokerAdapter {
     @Nonnull
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
+        log.info("Bot {} cancels order {}", botId, orderId);
         final CompletableFuture<Void> future = api.getOrdersContext().cancelOrder(orderId, null);
         ordersManager.cancelOrder(orderId);
         return future;

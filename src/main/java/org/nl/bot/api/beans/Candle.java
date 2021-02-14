@@ -27,7 +27,7 @@ public interface Candle {
         BigDecimal getLowestPrice();
 
         /**
-         * Объём торгов.
+         * Amount (total number) of executed orders at this period of time
          */
         BigDecimal getTradingValue();
 

@@ -59,7 +59,7 @@ public class SandboxAdapter implements BrokerAdapter {
                     if(placedOrder == null) {
                         continue;
                     }
-                    synchronized (Objects.requireNonNull(orderId)) {
+                    synchronized (orderId) {
                         final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 7);
                         final Optional<Orderbook> orderbook = future.join();
                         List<Orderbook.Item> items = new ArrayList<>();
@@ -78,6 +78,7 @@ public class SandboxAdapter implements BrokerAdapter {
                                 log.error("Error on put to queue", e);
                             }
                         } else { //Order executed completely
+                            log.info("Order executed: {}", placedOrder);
                             final String botId = orders2bot.remove(orderId);
                             if(botId != null) {
                                 final EventListener<OrderUpdateEvent> listener = botSubscriptions.get(botId);
@@ -169,7 +170,7 @@ public class SandboxAdapter implements BrokerAdapter {
                 .price(limitOrder.getPrice())
                 .build();
         String orderId = placedOrder.getId();
-        synchronized (Objects.requireNonNull(orderId)) {
+        synchronized (orderId) {
             created.put(orderId, placedOrder);
             registerOrder(botId, orderId);
             try {
@@ -185,7 +186,7 @@ public class SandboxAdapter implements BrokerAdapter {
     @Nonnull
     @Override
     public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
-        synchronized (Objects.requireNonNull(orderId)) {
+        synchronized (orderId) {
             final PlacedOrderSbx order = created.get(orderId);
             if(order != null) {
                 order.status = Status.Cancelled;
@@ -204,13 +205,13 @@ public class SandboxAdapter implements BrokerAdapter {
     }
 
     public void registerOrder(@Nonnull String botId, @Nonnull String orderId) {
-        synchronized (Objects.requireNonNull(orderId)) {
+        synchronized (orderId) {
             orders2bot.put(orderId, botId);
         }
     }
 
     public void cancelOrder(@Nonnull String orderId) {
-        synchronized (Objects.requireNonNull(orderId)) {
+        synchronized (orderId) {
             orders2bot.remove(orderId);
         }
     }
