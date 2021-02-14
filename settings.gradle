@@ -1,2 +1,4 @@
 rootProject.name = 'tradebot'
-
+include 'api'
+include 'tinkoff'
+include 'binance'
