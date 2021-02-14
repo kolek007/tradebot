@@ -17,9 +17,6 @@ public class WalletImpl implements Wallet, EventListener<OrderUpdateEvent> {
     @Nonnull
     @Getter
     private final BigDecimal initialAmount;
-    @Nullable
-    @Getter
-    private final BigDecimal limit;
     @Nonnull
     @Getter
     private BigDecimal amount;

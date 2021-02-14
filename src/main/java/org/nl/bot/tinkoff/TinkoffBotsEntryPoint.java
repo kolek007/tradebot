@@ -1,16 +1,13 @@
 package org.nl.bot.tinkoff;
 
 import lombok.RequiredArgsConstructor;
-import org.nl.bot.api.BotManager;
-import org.nl.bot.api.BrokerAdapter;
-import org.nl.bot.api.Interval;
-import org.nl.bot.api.WalletImpl;
-import org.nl.bot.api.strategies.AbsorptionStrategy;
+import org.nl.StartupConfig;
+import org.nl.bot.api.*;
 import org.nl.bot.api.strategies.StrategiesFactory;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 public class TinkoffBotsEntryPoint {
@@ -21,23 +18,20 @@ public class TinkoffBotsEntryPoint {
     @Nonnull
     BrokerAdapter adapter;
     @Nonnull
-    String[] tickers;
-    @Nonnull
-    List<Interval> intervals;
+    StartupConfig.Strategy[] strategies;
 
-    public void init() {
-        for(int i = 0; i < tickers.length; i++) {
-            String ticker = tickers[i];
-            Interval interval = intervals.get(i);
-            AbsorptionStrategy absorptionStrategy = strategiesFactory.createAbsorptionStrategy(ticker,
-                    interval,
-                    WalletImpl.builder()
-                        .amount(BigDecimal.valueOf(1000))
-                        .initialAmount(BigDecimal.valueOf(1000))
-                        .build(),
-                    adapter
-            );
-            botManager.run(absorptionStrategy);
+    public void init() throws Exception {
+        for (StartupConfig.Strategy strategy : strategies) {
+            String[] tickers = strategy.getTickers().split(",");
+            Interval[] intervals = Arrays.stream(strategy.getIntervals().split(",")).map(Interval::valueOf).toArray(Interval[]::new);
+            BigDecimal amount = BigDecimal.valueOf(strategy.getWallet().getAmount());
+            Strategy strat = strategiesFactory.createStrategy(strategy.getName(),
+                    tickers,
+                    intervals,
+                    WalletImpl.builder().amount(amount).initialAmount(amount).build(),
+                    adapter);
+            botManager.run(strat);
+
         }
     }
 }

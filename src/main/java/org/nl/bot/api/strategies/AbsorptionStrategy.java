@@ -39,7 +39,12 @@ public class AbsorptionStrategy extends AbstractStrategy {
     public void run() {
         Optional<List<Candle>> candles = adapter.getHistoricalCandles(instrument.getTicker(), OffsetDateTime.now().minusHours(2), OffsetDateTime.now(), instrument.getInterval()).join();
         if(candles.isPresent()) {
-            BigDecimal threshold = thirdQuartile(candles.get());
+            List<Candle> candlesList = candles.get();
+            if(candlesList.isEmpty()) {
+                log.error("Received zero candles from history for {}", instrument);
+                return;
+            }
+            BigDecimal threshold = thirdQuartile(candlesList);
             adapter.subscribeCandle(getId(), instruments.get(0), new Listener(threshold));
         }
     }

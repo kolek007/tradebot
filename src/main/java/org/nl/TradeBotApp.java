@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackageClasses = {TradeBotCfg.class, TinkoffCfg.class})
+@ComponentScan(basePackageClasses = {TinkoffCfg.class})
 public class TradeBotApp {
     public static void main(String[] args) {
         SpringApplication.run(TradeBotApp.class, args);
