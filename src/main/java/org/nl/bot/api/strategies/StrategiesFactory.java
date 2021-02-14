@@ -4,12 +4,32 @@ import org.nl.bot.api.BrokerAdapter;
 import org.nl.bot.api.Interval;
 import org.nl.bot.api.TickerWithInterval;
 import org.nl.bot.api.Wallet;
+import org.nl.bot.api.annotations.Strategy;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class StrategiesFactory {
 
-    public AbsorptionStrategy createAbsorptionStrategy(@Nonnull String ticker, @Nonnull Interval interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
-        return new AbsorptionStrategy(new TickerWithInterval(ticker, interval), adapter, wallet);
+    @Strategy(name = "Absorption")
+    public AbsorptionStrategy createAbsorptionStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
+        return new AbsorptionStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet);
+    }
+
+    public org.nl.bot.api.Strategy createStrategy(
+            @Nonnull String name,
+            @Nonnull String[] tickers,
+            @Nonnull Interval[] intervals,
+            @Nonnull Wallet wallet,
+            @Nonnull BrokerAdapter adapter) throws InvocationTargetException, IllegalAccessException {
+        Method[] methods = this.getClass().getMethods();
+        for (Method method : methods) {
+            Strategy annotation = method.getAnnotation(Strategy.class);
+            if(annotation != null && annotation.name().equals(name)) {
+                return (org.nl.bot.api.Strategy) method.invoke(this, tickers, intervals, wallet, adapter);
+            }
+        }
+        throw new RuntimeException("Strategy with name '" + name + "' wasn't found");
     }
 }

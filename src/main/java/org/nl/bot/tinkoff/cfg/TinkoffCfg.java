@@ -1,54 +1,44 @@
 package org.nl.bot.tinkoff.cfg;
 
+import org.nl.StartupConfig;
 import org.nl.bot.api.BotManager;
-import org.nl.bot.api.Interval;
+import org.nl.bot.api.BrokerAdapter;
 import org.nl.bot.api.strategies.StrategiesFactory;
 import org.nl.bot.sandbox.SandboxAdapter;
 import org.nl.bot.tinkoff.*;
-import org.springframework.beans.factory.annotation.Value;
+import org.nl.cfg.TradeBotCfg;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 import ru.tinkoff.invest.openapi.OpenApi;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Configuration
+@Import(TradeBotCfg.class)
 public class TinkoffCfg {
-    @Nonnull
-    @Value("${org.nl.ssoToken}")
-    private String ssoToken;
-    @Nonnull
-    @Value("#{'${org.nl.tickers}'.split(',')}")
-    private String[] tickers;
-    @Nonnull
-    @Value("#{'${org.nl.candleIntervals}'.split(',')}")
-    private String[] candleIntervals;
-    @Value("${org.nl.sandbox}")
-    private boolean sandbox;
 
     @Bean(destroyMethod = "destroy")
-    OpenApiFactory openApiFactory() {
-        return new OpenApiFactory(ssoToken, sandbox, threadPool());
+    OpenApiFactory openApiFactory(@Nonnull StartupConfig startupConfig) {
+        StartupConfig.Broker broker = startupConfig.getBroker();
+        return new OpenApiFactory(broker.isSandbox() ? broker.getSandboxSsoToken() : broker.getSsoToken(), broker.isSandbox(), threadPool());
     }
 
     @Bean
-    OpenApi openApi() {
-        return openApiFactory().createConnection();
+    OpenApi openApi(@Nonnull OpenApiFactory openApiFactory) {
+        return openApiFactory.createConnection();
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
-    TinkoffAdapter tinkoffAdapter() {
-        return new TinkoffAdapter(openApi(), beansConverter(), tickerFigiMapping(), botManager(), tkfSubscriber(), ordersManager());
+    TinkoffAdapter tinkoffAdapter(@Nonnull OpenApi openApi) {
+        return new TinkoffAdapter(openApi, beansConverter(), tickerFigiMapping(), botManager(), tkfSubscriber(), ordersManager(openApi));
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
-    SandboxAdapter sandboxAdapter() {
-        return new SandboxAdapter(tinkoffAdapter(), threadPool());
+    SandboxAdapter sandboxAdapter(@Nonnull TinkoffAdapter tinkoffAdapter) {
+        return new SandboxAdapter(tinkoffAdapter, threadPool());
     }
 
     @Bean
@@ -57,8 +47,8 @@ public class TinkoffCfg {
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
-    OrdersManager ordersManager() {
-        return new OrdersManager(beansConverter(), openApi());
+    OrdersManager ordersManager(@Nonnull OpenApi openApi) {
+        return new OrdersManager(beansConverter(), openApi);
     }
 
     @Bean
@@ -82,8 +72,10 @@ public class TinkoffCfg {
     }
 
     @Bean(initMethod = "init")
-    TinkoffBotsEntryPoint tinkoffBotsEntryPoint() {
-        return new TinkoffBotsEntryPoint(botManager(), strategiesFactory(), sandboxAdapter(), tickers, Arrays.stream(candleIntervals).map(Interval::valueOf).collect(Collectors.toList()));
+    TinkoffBotsEntryPoint tinkoffBotsEntryPoint(@Nonnull StartupConfig startupConfig, @Nonnull OpenApi openApi) {
+        TinkoffAdapter tinkoffAdapter = tinkoffAdapter(openApi);
+        BrokerAdapter adapter = startupConfig.getBroker().isSandbox() ? sandboxAdapter(tinkoffAdapter) : tinkoffAdapter;
+        return new TinkoffBotsEntryPoint(botManager(), strategiesFactory(), adapter, startupConfig.getStrategies());
     }
 
     @Bean

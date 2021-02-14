@@ -39,7 +39,12 @@ public class AbsorptionStrategy extends AbstractStrategy {
     public void run() {
         Optional<List<Candle>> candles = adapter.getHistoricalCandles(instrument.getTicker(), OffsetDateTime.now().minusHours(2), OffsetDateTime.now(), instrument.getInterval()).join();
         if(candles.isPresent()) {
-            BigDecimal threshold = thirdQuartile(candles.get());
+            List<Candle> candlesList = candles.get();
+            if(candlesList.isEmpty()) {
+                log.error("Received zero candles from history for {}", instrument);
+                return;
+            }
+            BigDecimal threshold = thirdQuartile(candlesList);
             adapter.subscribeCandle(getId(), instruments.get(0), new Listener(threshold));
         }
     }
@@ -73,7 +78,7 @@ public class AbsorptionStrategy extends AbstractStrategy {
                 BigDecimal firstHeight = height(first);
                 BigDecimal secondHeight = height(second);
                 if(green(second) && meetsRequirements(second) && weakEqual(firstHeight, secondHeight, ERROR_PERCENTAGE)) { //main strategy condition met, need to buy
-                    BigDecimal price = candle.getHighestPrice();
+                    BigDecimal price = candle.getClosingPrice();
                     BigDecimal takeProfit = price.add(secondHeight.multiply(BigDecimal.valueOf(TAKE_PROFIT_PERCENTAGE)));
                     BigDecimal stopLoss = price.subtract(secondHeight.multiply(BigDecimal.valueOf(STOP_LOSS_PERCENTAGE)));
                     adapter.placeOrder(getId(), instrument.getTicker(), new OrderTkf(1, Operation.Buy, price), null).join(); //TODO need to think about price and lots amount

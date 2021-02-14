@@ -198,7 +198,7 @@ public class TinkoffAdapter implements BrokerAdapter {
     }
 
     @Nonnull
-    public CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
+    private CompletableFuture<PlacedOrder> placedOrderFuture(@Nonnull CompletableFuture<ru.tinkoff.invest.openapi.models.orders.PlacedOrder> future,
                                                             String botId, @Nonnull String ticker,
                                                             @Nonnull Order order, @Nonnull OrdersManager ordersManager) {
         return new CompletableFuture<PlacedOrder>() {

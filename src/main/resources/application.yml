@@ -3,7 +3,5 @@ spring:
     name: tradebot
 org:
   nl:
-    ssoToken: not-set
-    tickers: not-set
-    candleIntervals: not-set
-    sandbox: true
+    startup:
+      config: /startup_config.json

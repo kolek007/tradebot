@@ -12,9 +12,6 @@ public interface Wallet {
     @Nonnull
     BigDecimal getInitialAmount();
 
-    @Nullable
-    BigDecimal getLimit();
-
     @Nonnull
     BigDecimal getAmount();
 
