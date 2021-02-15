@@ -7,6 +7,7 @@ import org.nl.bot.api.Wallet;
 import org.nl.bot.api.annotations.Strategy;
 
 import javax.annotation.Nonnull;
+import java.math.BigDecimal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -31,5 +32,10 @@ public class StrategiesFactory {
             }
         }
         throw new RuntimeException("Strategy with name '" + name + "' wasn't found");
+    }
+
+    @Nonnull
+    public AdaptiveStopLossStrategy createAdaptiveStopLossStrategy(@Nonnull String ticker, @Nonnull Interval interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
+        return new AdaptiveStopLossStrategy(new TickerWithInterval(ticker, interval), adapter, wallet, new BigDecimal("0.02"));
     }
 }

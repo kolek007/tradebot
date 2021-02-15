@@ -47,13 +47,6 @@ dependencies {
     testImplementation 'org.junit.platform:junit-platform-launcher:1.5.2'
 }
 
-bootJar {
-    enabled = false
-}
-jar {
-    enabled = true
-}
-
 test {
     useJUnitPlatform()
 }
