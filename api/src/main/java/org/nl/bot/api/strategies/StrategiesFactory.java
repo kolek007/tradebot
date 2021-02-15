@@ -35,7 +35,8 @@ public class StrategiesFactory {
     }
 
     @Nonnull
-    public AdaptiveStopLossStrategy createAdaptiveStopLossStrategy(@Nonnull String ticker, @Nonnull Interval interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
-        return new AdaptiveStopLossStrategy(new TickerWithInterval(ticker, interval), adapter, wallet, new BigDecimal("0.02"));
+    @Strategy(name = "AdaptiveStopLossStrategy")
+    public AdaptiveStopLossStrategy createAdaptiveStopLossStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
+        return new AdaptiveStopLossStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.02"));
     }
 }

@@ -11,7 +11,7 @@
 - Open IDEA, create new project from existing sources (choose tradebot/build.gradle file)
 
 ## Run
-To run tradebot you need to prepare config file with bot properties like in the following example
+To run tradebot you need to prepare config file (you can name it startup_config.json and put in project - it will be ignored by git) with bot properties like in the following example
 ```json
 {
   "broker": {
@@ -32,6 +32,7 @@ To run tradebot you need to prepare config file with bot properties like in the 
   ]
 }
 ```
+and run TradeBotApp with the following VM Option: **-Dorg.nl.startup.config=\<path to config\>\startup_config.json**
 Strategy name should correspond to name described in annotation [Strategy](https://github.com/kolek007/tradebot/blob/main/src/main/java/org/nl/bot/api/annotations/Strategy.java) near the method responsible for strategy creation in [StrategiesFactory](https://github.com/kolek007/tradebot/blob/main/src/main/java/org/nl/bot/api/strategies/StrategiesFactory.java).
 Example of how to define Strategy creation method:
 ```java
