@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: tradebot
+org:
+  nl:
+    startup:
+      config: /startup_config.json
