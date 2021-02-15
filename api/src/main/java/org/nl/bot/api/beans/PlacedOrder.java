@@ -13,38 +13,20 @@ public interface PlacedOrder extends Order {
     @Nonnull
     String getTicker();
 
-    /**
-     * Идентификатор заявки.
-     */
     @Nonnull
     String getId();
 
-    /**
-     * Текущий статус.
-     */
     @Nonnull
     Status getStatus();
 
-    /**
-     * Код причина отказа в размещении.
-     */
     @Nullable
     String getRejectReason();
 
-    /**
-     * Причина отказа в размещении (человеческий текст).
-     */
     @Nullable
     String getMessage();
 
-    /**
-     * Реально исполненное количество лотов.
-     */
     int getExecutedLots();
 
-    /**
-     * Размер коммиссии.
-     */
     @Nullable
     MoneyAmount getCommission();
 

@@ -12,20 +12,11 @@ public interface Orderbook {
     @Nonnull
     String getTicker();
 
-    /**
-     * Глубина стакана.
-     */
     int getDepth();
 
-    /**
-     * Список выставленных заявок на продажу.
-     */
     @Nonnull
     List<Item> getBids();
 
-    /**
-     * Список выставленных заявок на покупку.
-     */
     @Nonnull
     List<Item> getAsks();
 
@@ -33,15 +24,9 @@ public interface Orderbook {
     @Getter
     final class Item {
 
-        /**
-         * Цена предложения.
-         */
         @Nonnull
         private final BigDecimal price;
 
-        /**
-         * Количество предложений по цене.
-         */
         @Nonnull
         private final BigDecimal quantity;
 

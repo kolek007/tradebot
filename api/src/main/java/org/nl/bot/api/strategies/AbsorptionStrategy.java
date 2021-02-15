@@ -64,6 +64,13 @@ public class AbsorptionStrategy extends AbstractStrategy {
         public void onEvent(CandleEvent candleEvent) {
             log.info("Bot {} received candle event {}", getId(), candleEvent);
             Candle candle = candleEvent.getCandle();
+            BigDecimal closingPrice = candle.getClosingPrice();
+            wallet.getOrders().forEach((id, order) -> {
+                if(isStopLoss(closingPrice, order.getPrice(), ERROR_PERCENTAGE)) {
+                    log.info("Stop Loss for order {}", order);
+                    adapter.cancelOrder(getId(), id, null);
+                }
+            });
             if(first == null) {
                 first = candle;
             } else if(second == null) {
@@ -78,12 +85,12 @@ public class AbsorptionStrategy extends AbstractStrategy {
                 BigDecimal firstHeight = height(first);
                 BigDecimal secondHeight = height(second);
                 if(green(second) && meetsRequirements(second) && weakEqual(firstHeight, secondHeight, ERROR_PERCENTAGE)) { //main strategy condition met, need to buy
+                    log.info("Found absorption with candles {} and {}", first, second);
                     BigDecimal price = candle.getClosingPrice();
                     BigDecimal takeProfit = price.add(secondHeight.multiply(BigDecimal.valueOf(TAKE_PROFIT_PERCENTAGE)));
-                    BigDecimal stopLoss = price.subtract(secondHeight.multiply(BigDecimal.valueOf(STOP_LOSS_PERCENTAGE)));
                     adapter.placeOrder(getId(), instrument.getTicker(), new OrderImpl(1, Operation.Buy, price), null).join(); //TODO need to think about price and lots amount
                     adapter.placeOrder(getId(), instrument.getTicker(), new OrderImpl(1, Operation.Sell, takeProfit), null); //TAKE PROFIT
-                    adapter.placeOrder(getId(), instrument.getTicker(), new OrderImpl(1, Operation.Sell, stopLoss), null); //STOP LOSS
+//                    adapter.placeOrder(getId(), instrument.getTicker(), new OrderImpl(1, Operation.Sell, stopLoss), null); //STOP LOSS
                 }
                 //Starting new iteration of awaiting conditions
                 first = candle;

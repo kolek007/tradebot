@@ -87,4 +87,11 @@ public class StrategiesMath {
     public static boolean weakEqual(@Nonnull BigDecimal first, @Nonnull BigDecimal second, double error) {
         return first.subtract(second).abs().compareTo(first.multiply(BigDecimal.valueOf(error))) <= 0;
     }
+
+    /**
+     * Checks that two values are equal up to a given error
+     */
+    public static boolean isStopLoss(@Nonnull BigDecimal currentPrice, @Nonnull BigDecimal orderPrice, double lossPercentage) {
+        return currentPrice.subtract(orderPrice).compareTo(currentPrice.multiply(BigDecimal.valueOf(lossPercentage))) >= 0;
+    }
 }

@@ -3,6 +3,7 @@ package org.nl.bot.api.beans.impl;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.nl.bot.api.Interval;
 import org.nl.bot.api.beans.Candle;
 
@@ -12,6 +13,7 @@ import java.time.ZonedDateTime;
 @RequiredArgsConstructor
 @Getter
 @Builder
+@ToString
 public class CandleImpl implements Candle {
 
     private final BigDecimal openPrice;

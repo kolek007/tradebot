@@ -24,13 +24,6 @@ public interface BrokerAdapter extends CandleSubscriber, OrderbookSubscriber, Or
             @Nonnull Order marketOrder,
             @Nullable String brokerAccountId);
 
-    /**
-     * Отзыв лимитной заявки.
-     *
-     * @param orderId         Идентификатор заявки.
-     * @param brokerAccountId Идентификатор брокерского счёта.
-     * @return Ничего.
-     */
     @Nonnull
     CompletableFuture<Void> cancelOrder(
             @Nonnull String botId,
