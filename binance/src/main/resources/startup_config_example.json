@@ -1,0 +1,18 @@
+{
+  "broker": {
+    "name": "Tinkoff",
+    "ssoToken": "token",
+    "sandboxSsoToken": "token",
+    "sandbox": true
+  },
+  "strategies":[
+    {
+      "name": "Absorption",
+      "tickers": "AAPL",
+      "intervals": "MIN_1",
+      "wallet": {
+        "amount": 1000
+      }
+    }
+  ]
+}
