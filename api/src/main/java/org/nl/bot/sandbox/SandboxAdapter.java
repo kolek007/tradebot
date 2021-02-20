@@ -60,7 +60,7 @@ public class SandboxAdapter implements BrokerAdapter {
                         continue;
                     }
                     synchronized (orderId) {
-                        final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 7);
+                        final CompletableFuture<Optional<Orderbook>> future = getOrderbook(placedOrder.getTicker(), 10);
                         final Optional<Orderbook> orderbook = future.join();
                         List<Orderbook.Item> items = new ArrayList<>();
                         if(placedOrder.getOperation() == Operation.Buy) {
