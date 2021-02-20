@@ -25,7 +25,7 @@ public interface PlacedOrder extends Order {
     @Nullable
     String getMessage();
 
-    int getExecutedLots();
+    double getExecutedLots();
 
     @Nullable
     MoneyAmount getCommission();

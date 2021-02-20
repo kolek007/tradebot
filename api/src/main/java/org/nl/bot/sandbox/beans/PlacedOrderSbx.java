@@ -41,10 +41,10 @@ public class PlacedOrderSbx implements PlacedOrder {
     public String message;
 
     @Setter
-    public int lots;
+    public double lots;
 
     @Setter
-    public int executedLots;
+    public double executedLots;
 
     @Setter
     @Nullable

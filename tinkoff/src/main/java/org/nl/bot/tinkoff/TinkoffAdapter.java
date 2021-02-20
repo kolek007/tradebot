@@ -132,7 +132,7 @@ public class TinkoffAdapter implements BrokerAdapter {
 
     @Nonnull
     @Override
-    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
+    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull String orderId, @Nullable String brokerAccountId) {
         log.info("Bot {} cancels order {}", botId, orderId);
         final CompletableFuture<Void> future = api.getOrdersContext().cancelOrder(orderId, null);
         ordersManager.cancelOrder(orderId);

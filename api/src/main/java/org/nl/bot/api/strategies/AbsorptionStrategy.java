@@ -68,7 +68,7 @@ public class AbsorptionStrategy extends AbstractStrategy {
             wallet.getOrders().forEach((id, order) -> {
                 if(isStopLoss(closingPrice, order.getPrice(), ERROR_PERCENTAGE)) {
                     log.info("Stop Loss for order {}", order);
-                    adapter.cancelOrder(getId(), id, null);
+                    adapter.cancelOrder(getId(), order.getTicker(), id, null);
                 }
             });
             if(first == null) {

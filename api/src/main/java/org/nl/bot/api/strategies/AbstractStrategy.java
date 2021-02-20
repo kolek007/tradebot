@@ -31,7 +31,7 @@ public abstract class AbstractStrategy implements Strategy {
         instruments.forEach(instr -> adapter.unsubscribeOrderbook(id, instr.getTicker()));
         instruments.forEach(instr -> adapter.unsubscribeFromOrdersUpdate(id));
         for(String orderId : getWallet().getOrders().keySet()) {
-            adapter.cancelOrder(id, orderId, null);
+            adapter.cancelOrder(id, getWallet().getOrders().get(orderId).getTicker(), orderId, null);
         }
     }
 

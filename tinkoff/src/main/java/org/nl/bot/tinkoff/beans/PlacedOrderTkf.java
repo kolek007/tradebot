@@ -58,12 +58,12 @@ public class PlacedOrderTkf implements PlacedOrder {
     /**
      * Желаемое количество лотов.
      */
-    public int lots;
+    public double lots;
 
     /**
      * Реально исполненное количество лотов.
      */
-    public int executedLots;
+    public double executedLots;
 
     /**
      * Размер коммиссии.

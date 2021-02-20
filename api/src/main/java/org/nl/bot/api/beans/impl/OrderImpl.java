@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Getter
 @ToString
 public class OrderImpl implements Order {
-    int lots;
+    double lots;
     @Nonnull
     Operation operation;
     @Nonnull

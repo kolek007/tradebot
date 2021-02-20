@@ -14,10 +14,14 @@ sourceCompatibility = '1.8'
 repositories {
     mavenCentral()
     mavenLocal()
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
     implementation project(':api')
+    implementation 'com.binance.api:binance-api-client:1.0.1'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.2'

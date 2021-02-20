@@ -60,7 +60,7 @@ public class BrokerMock implements BrokerAdapter {
 
     @Nonnull
     @Override
-    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
+    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull String orderId, @Nullable String brokerAccountId) {
         return null;
     }
 

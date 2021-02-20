@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public interface Order {
 
-    int getLots();
+    double getLots();
     @Nonnull
     Operation getOperation();
     @Nonnull

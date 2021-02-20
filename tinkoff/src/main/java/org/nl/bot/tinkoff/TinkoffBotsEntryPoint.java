@@ -1,7 +1,7 @@
 package org.nl.bot.tinkoff;
 
 import lombok.RequiredArgsConstructor;
-import org.nl.StartupConfig;
+import org.nl.StrategyConfig;
 import org.nl.bot.api.*;
 import org.nl.bot.api.strategies.StrategiesFactory;
 
@@ -18,10 +18,10 @@ public class TinkoffBotsEntryPoint {
     @Nonnull
     BrokerAdapter adapter;
     @Nonnull
-    StartupConfig.Strategy[] strategies;
+    StrategyConfig[] strategies;
 
     public void init() throws Exception {
-        for (StartupConfig.Strategy strategy : strategies) {
+        for (StrategyConfig strategy : strategies) {
             String[] tickers = strategy.getTickers().split(",");
             Interval[] intervals = Arrays.stream(strategy.getIntervals().split(",")).map(Interval::valueOf).toArray(Interval[]::new);
             BigDecimal amount = BigDecimal.valueOf(strategy.getWallet().getAmount());

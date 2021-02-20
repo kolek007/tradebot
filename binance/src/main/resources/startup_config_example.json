@@ -1,14 +1,14 @@
 {
   "broker": {
-    "name": "Tinkoff",
-    "ssoToken": "token",
-    "sandboxSsoToken": "token",
+    "name": "Binance",
+    "apiKey": "apiKey",
+    "secret": "secret",
     "sandbox": true
   },
   "strategies":[
     {
       "name": "Absorption",
-      "tickers": "AAPL",
+      "tickers": "BTCUSDT",
       "intervals": "MIN_1",
       "wallet": {
         "amount": 1000

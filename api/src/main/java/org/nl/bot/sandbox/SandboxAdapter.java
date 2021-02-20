@@ -185,7 +185,7 @@ public class SandboxAdapter implements BrokerAdapter {
 
     @Nonnull
     @Override
-    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String orderId, @Nullable String brokerAccountId) {
+    public CompletableFuture<Void> cancelOrder(@Nonnull String botId, @Nonnull String ticker, @Nonnull String orderId, @Nullable String brokerAccountId) {
         synchronized (orderId) {
             final PlacedOrderSbx order = created.get(orderId);
             if(order != null) {
