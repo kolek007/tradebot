@@ -39,4 +39,10 @@ public class StrategiesFactory {
     public AdaptiveStopLossStrategy createAdaptiveStopLossStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
         return new AdaptiveStopLossStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.02"));
     }
+
+    @Nonnull
+    @Strategy(name = "SlidingMinMaxStrategy")
+    public SlidingMinMaxStrategy createSlidingMinMaxStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
+        return new SlidingMinMaxStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.002"));
+    }
 }
