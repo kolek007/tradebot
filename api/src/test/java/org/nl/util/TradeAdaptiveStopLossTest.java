@@ -2,6 +2,7 @@ package org.nl.util;
 
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.nl.bot.api.*;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Log4j2
+@Disabled
 public class TradeAdaptiveStopLossTest {
     @Nonnull
     private final BrokerMock broker = new BrokerMock();
