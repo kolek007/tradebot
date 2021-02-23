@@ -73,7 +73,10 @@ public class BrokerMock implements BrokerAdapter {
     @Nonnull
     @Override
     public CompletableFuture<Optional<List<Candle>>> getHistoricalCandles(@Nonnull String ticker, @Nonnull OffsetDateTime from, @Nonnull OffsetDateTime to, @Nonnull Interval interval) {
-        return null;
+        CompletableFuture<Optional<List<Candle>>> optionalCompletableFuture = new CompletableFuture<>();
+        optionalCompletableFuture.complete(Optional.of(new ArrayList<>()));
+
+        return optionalCompletableFuture;
     }
 
     @Override
