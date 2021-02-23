@@ -19,6 +19,12 @@ public class BrokerAssert extends AbstractAssert<BrokerAssert, BrokerMock> {
     }
 
     @Nonnull
+    public BrokerAssert notEntered() {
+        Assertions.assertThat(actual.getOrders()).as("No buy orders").isEmpty();
+        return this;
+    }
+
+    @Nonnull
     public BrokerAssert enteredAt(BigDecimal price) {
         Assertions.assertThat(actual.getOrders()).as("Enter price").extracting(Order::getOperation,Order::getPrice).containsOnlyOnce(new Tuple(Operation.Buy,price));
         return this;

@@ -37,7 +37,14 @@ public class StrategiesFactory {
     @Nonnull
     @Strategy(name = "AdaptiveStopLossStrategy")
     public AdaptiveStopLossStrategy createAdaptiveStopLossStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
-        return new AdaptiveStopLossStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.02"));
+        AdaptiveStrategyConfig config = AdaptiveStrategyConfig.builder()
+                .minPredictionSize(30)
+                .stopLoss(new BigDecimal("0.02"))
+                .takeProfit(new BigDecimal("0.02"))
+                .instrument(new TickerWithInterval(ticker[0], interval[0]))
+                .build();
+
+        return new AdaptiveStopLossStrategy(config, adapter, wallet);
     }
 
     @Nonnull

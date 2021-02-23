@@ -1,19 +1,20 @@
 package org.nl.bot.api.beans.impl;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.*;
 import org.nl.bot.api.Interval;
 import org.nl.bot.api.beans.Candle;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
+@JsonDeserialize(builder = CandleImpl.CandleImplBuilder.class)
 @RequiredArgsConstructor
 @Getter
 @Builder
 @ToString
+@EqualsAndHashCode
 public class CandleImpl implements Candle {
 
     private final BigDecimal openPrice;
@@ -31,4 +32,9 @@ public class CandleImpl implements Candle {
     private final Interval interval;
 
     private final String ticker;
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class CandleImplBuilder {
+
+    }
 }
