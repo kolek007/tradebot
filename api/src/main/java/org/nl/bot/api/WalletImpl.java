@@ -26,17 +26,17 @@ public class WalletImpl implements Wallet, EventListener<OrderUpdateEvent> {
     protected final Map<String, PlacedOrder> orders = new ConcurrentHashMap<>();
 
     public boolean withdraw(@Nonnull BigDecimal value) {
-        log.info("Withdrawal: {}. Current amount is {}", value.toPlainString(), amount.toPlainString());
         if(amount.compareTo(value) < 0) {
             return false;
         }
         amount = amount.subtract(value);
+        log.warn("Withdrawal: {}. Current amount is {}", value.toPlainString(), amount.toPlainString());
         return true;
     }
 
     public void enroll(@Nonnull BigDecimal value) {
-        log.info("Enrolling: {}. Current amount is {}", value.toPlainString(), amount.toPlainString());
         amount = amount.add(value);
+        log.warn("Enrolling: {}. Current amount is {}", value.toPlainString(), amount.toPlainString());
     }
 
     @Override

@@ -27,6 +27,7 @@ public interface BrokerAdapter extends CandleSubscriber, OrderbookSubscriber, Or
     @Nonnull
     CompletableFuture<Void> cancelOrder(
             @Nonnull String botId,
+            @Nonnull String ticker,
             @Nonnull String orderId,
             @Nullable String brokerAccountId
     );

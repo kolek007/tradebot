@@ -120,7 +120,7 @@ public class BeansConverter {
 
     @Nonnull
     public LimitOrder limitOrder(@Nonnull Order order) {
-        return new LimitOrder(order.getLots(), operation(order.getOperation()), order.getPrice());
+        return new LimitOrder((int)order.getLots(), operation(order.getOperation()), order.getPrice());
     }
 
     @Nullable

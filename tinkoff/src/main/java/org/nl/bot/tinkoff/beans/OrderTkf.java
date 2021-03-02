@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @EqualsAndHashCode
 @ToString
 public class OrderTkf implements Order {
-    private final int lots;
+    private final double lots;
     @Nonnull
     private final Operation operation;
     @Nonnull

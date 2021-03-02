@@ -9,12 +9,12 @@ import lombok.ToString;
 @Getter
 public class StartupConfig {
 
-    Broker broker;
+    BrokerConfig broker;
     StrategyConfig[] strategies;
 
     @JsonCreator
     public StartupConfig(
-            @JsonProperty("broker") Broker broker,
+            @JsonProperty("broker") BrokerConfig broker,
             @JsonProperty("strategies") StrategyConfig[] strategies
     ) {
         this.broker = broker;
@@ -24,22 +24,22 @@ public class StartupConfig {
 
     @Getter
     @ToString
-    public static class Broker {
+    public static class BrokerConfig {
         String name;
-        String ssoToken;
-        String sandboxSsoToken;
+        String apiKey;
+        String secret;
         boolean sandbox;
 
         @JsonCreator
-        public Broker(
+        public BrokerConfig(
                 @JsonProperty("name") String name,
-                @JsonProperty("ssoToken") String ssoToken,
-                @JsonProperty("sandboxSsoToken") String sandboxSsoToken,
+                @JsonProperty("apiKey") String apiKey,
+                @JsonProperty("secret") String secret,
                 @JsonProperty("sandbox") boolean sandbox
         ) {
             this.name = name;
-            this.ssoToken = ssoToken;
-            this.sandboxSsoToken = sandboxSsoToken;
+            this.apiKey = apiKey;
+            this.secret = secret;
             this.sandbox = sandbox;
         }
     }
