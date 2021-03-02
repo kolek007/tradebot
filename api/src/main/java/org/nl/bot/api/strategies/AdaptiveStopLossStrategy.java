@@ -126,10 +126,12 @@ public class AdaptiveStopLossStrategy extends AbstractStrategy {
 
         log.info("ENTER at [price={}]",enteredAt);
         adapter.placeOrder(getId(), config.instrument().getTicker(), new OrderImpl(1, Operation.Buy,val),null);
+        wallet.withdraw(val.multiply(BigDecimal.valueOf(1)));
     }
 
     private void exit(@Nonnull BigDecimal closingPrice) {
         adapter.placeOrder(getId(),config.instrument().getTicker(), new OrderImpl(1, Operation.Sell,closingPrice),null);
+        wallet.enroll(closingPrice.multiply(BigDecimal.valueOf(1)));
         currentMax = null;
         enteredAt = null;
     }

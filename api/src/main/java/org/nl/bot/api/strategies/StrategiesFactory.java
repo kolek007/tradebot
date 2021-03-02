@@ -50,6 +50,6 @@ public class StrategiesFactory {
     @Nonnull
     @Strategy(name = "SlidingMinMaxStrategy")
     public SlidingMinMaxStrategy createSlidingMinMaxStrategy(@Nonnull String[] ticker, @Nonnull Interval[] interval, @Nonnull Wallet wallet, @Nonnull BrokerAdapter adapter) {
-        return new SlidingMinMaxStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.002"));
+        return new SlidingMinMaxStrategy(new TickerWithInterval(ticker[0], interval[0]), adapter, wallet, new BigDecimal("0.8"));
     }
 }

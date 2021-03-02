@@ -7,10 +7,13 @@ import org.nl.bot.api.Operation;
 import org.nl.bot.api.TickerWithInterval;
 import org.nl.bot.api.Wallet;
 import org.nl.bot.api.beans.impl.OrderImpl;
+import org.nl.bot.api.strategies.util.StrategiesMath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -26,6 +29,8 @@ public class SlidingMinMaxStrategy extends AbstractStrategy {
     private volatile BigDecimal enteredAt;
     @Nonnull
     private final BigDecimal threshold;
+    @Nonnull
+    private List<BigDecimal> lastCandles = new LinkedList<>();
 
 
     public SlidingMinMaxStrategy(@Nonnull TickerWithInterval instrument,
@@ -49,9 +54,19 @@ public class SlidingMinMaxStrategy extends AbstractStrategy {
     @Override
     public void run() {
         adapter.subscribeCandle(getId(), instruments.get(0), candleEvent -> {
+            if (lastCandles.size() <= 61) {
+                lastCandles.add(StrategiesMath.height(candleEvent.getCandle()));
+                return;
+            }
+            lastCandles.add(StrategiesMath.height(candleEvent.getCandle()));
+            lastCandles.remove(0);
+            lastCandles.sort(BigDecimal::compareTo);
+            BigDecimal medianHeight = lastCandles.get(30);
+            BigDecimal medianThreshold = medianHeight.multiply(threshold);
+//            synchronized (SlidingMinMaxStrategy.this) {
             BigDecimal closingPrice = candleEvent.getCandle().getClosingPrice();
-            if(enteredAt == null) {
-                if(currentMin == null) {
+            if (enteredAt == null) {
+                if (currentMin == null) {
                     currentMin = closingPrice;
                 } else {
                     BigDecimal subtract = closingPrice.subtract(currentMin);
@@ -60,41 +75,44 @@ public class SlidingMinMaxStrategy extends AbstractStrategy {
                         currentMin = closingPrice;
                         log.info("Down [diff={}]", subtract);
                     } else {
-                        if (subtract.compareTo(currentMin.multiply(threshold)) >= 0) {
-                            log.info("Enter at [price={}, percent={}, min={}, diff={}]",
-                                    closingPrice, currentMin.multiply(threshold), currentMin, subtract);
+                        if (subtract.compareTo(medianThreshold) >= 0) {
+                            log.warn("Enter at [price={}, min={}, diff={}]",
+                                    closingPrice, currentMin, subtract);
+                            wallet.withdraw(closingPrice.multiply(BigDecimal.valueOf(0.001)));
                             adapter.placeOrder(getId(), candleEvent.getCandle().getTicker(), new OrderImpl(0.001, Operation.Buy, closingPrice), null);
                             currentMax = closingPrice;
                             currentMin = null;
                             enteredAt = closingPrice;
                         } else {
-                            log.info("Up [closing-price={}, percent={}, min={}, diff={}]",
-                                    closingPrice, currentMin.multiply(threshold), currentMin, subtract);
+                            log.info("Up [closing-price={}, min={}, diff={}]",
+                                    closingPrice, currentMin, subtract);
                         }
                     }
                 }
                 return;
             }
 
-            if(currentMax != null) {
-                BigDecimal subtract = closingPrice.subtract(currentMax);
-                log.info("Price changed [max={}, closing={}, entered-at={}, diff={}]", currentMax, closingPrice, enteredAt, subtract);
+            if (currentMax != null) {
+                BigDecimal diff = closingPrice.subtract(currentMax);
+                log.info("Price changed [max={}, closing={}, entered-at={}, diff={}]", currentMax, closingPrice, enteredAt, diff);
                 if (currentMax.compareTo(closingPrice) < 0) {
                     currentMax = closingPrice;
-                    log.info("Up [diff={}]", subtract);
+                    log.info("Up [diff={}]", diff);
                 } else {
-                    if (currentMax.multiply(threshold).compareTo(subtract.abs()) <= 0) {
-                        log.info("Exit at [closing-price={}, revenue={}, percent={}, max={}, diff={}]",
-                                closingPrice, closingPrice.subtract(enteredAt), currentMax.multiply(threshold), currentMax, subtract);
-                        adapter.placeOrder(getId(), candleEvent.getCandle().getTicker(), new OrderImpl(1, Operation.Sell, closingPrice), null);
+                    if (diff.abs().compareTo(medianThreshold) >= 0) {
+                        log.warn("Exit at [closing-price={}, revenue={}, max={}, diff={}]",
+                                closingPrice, closingPrice.subtract(enteredAt), currentMax, diff);
+                        adapter.placeOrder(getId(), candleEvent.getCandle().getTicker(), new OrderImpl(0.001, Operation.Sell, closingPrice), null);
+                        wallet.enroll(closingPrice.multiply(BigDecimal.valueOf(0.001)));
                         currentMax = null;
                         enteredAt = null;
                     } else {
-                        log.info("Down [closing-price={}, revenue={}, percent={}, max={}, diff={}]",
-                                closingPrice, closingPrice.subtract(enteredAt), currentMax.multiply(threshold), currentMax, subtract);
+                        log.info("Down [closing-price={}, revenue={}, max={}, diff={}]",
+                                closingPrice, closingPrice.subtract(enteredAt), currentMax, diff);
                     }
                 }
             }
+//        }
         });
     }
 
